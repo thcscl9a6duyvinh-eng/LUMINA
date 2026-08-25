@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#06162d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LUMINA" />
+  <title>LUMINA Money</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card glass">
+      <div class="brand-row auth-brand">
+        <div class="avatar">DV</div>
+        <div>
+          <div class="brand">LUMINA</div>
+          <div class="subtitle">Dev by Duy Vĩnh · v1.5.4</div>
+        </div>
+      </div>
+      <h1>Quản lý chi tiêu thông minh</h1>
+      <p class="muted">Dữ liệu được lưu theo tài khoản Supabase để Safari và bản thêm vào Màn hình chính cùng nhìn thấy một nguồn dữ liệu.</p>
+      <form id="authForm" autocomplete="on">
+        <label>Email<input id="emailInput" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+        <label>Mật khẩu<input id="passwordInput" type="password" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự" required minlength="6" /></label>
+        <div class="auth-actions">
+          <button class="primary" type="submit" data-mode="login">Đăng nhập</button>
+          <button class="secondary" type="button" id="signupBtn">Đăng ký</button>
+        </div>
+      </form>
+      <button id="demoBtn" class="link-btn" type="button">Xem bản demo giao diện</button>
+      <div id="configHint" class="config-hint"></div>
+    </div>
+  </div>
+
+  <main id="appShell" class="phone-shell hidden" aria-live="polite">
+    <header class="topbar">
+      <button id="menuBtn" class="icon-btn avatar-btn" aria-label="Mở menu"><span id="userAvatar">DV</span></button>
+      <div class="brand-block">
+        <div class="brand">LUMINA</div>
+        <div class="subtitle">Dev by Duy Vĩnh</div>
+        <div class="version">v1.5.4</div>
+      </div>
+      <button id="notifyBtn" class="icon-btn" aria-label="Thông báo">🔔<span id="notifDot" class="notif-dot"></span></button>
+    </header>
+
+    <section id="screen" class="screen home-screen"></section>
+
+    <nav class="bottom-nav" aria-label="Điều hướng chính">
+      <button class="nav-item active" data-page="home"><span>⌂</span><small>Trang chủ</small></button>
+      <button class="nav-item" data-page="stats"><span>⌁</span><small>Thống kê</small></button>
+      <button id="micBtn" class="mic-main" aria-label="Nhập bằng giọng nói">🎙</button>
+      <button class="nav-item" data-page="goals"><span>◉</span><small>Mục tiêu</small></button>
+      <button class="nav-item" data-page="wallets"><span>▣</span><small>Ví tiền</small></button>
+    </nav>
+  </main>
+
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div class="avatar big" id="drawerAvatar">DV</div>
+      <div><strong id="drawerName">Duy Vĩnh</strong><small id="drawerEmail">demo@lumina.app</small></div>
+      <button id="closeDrawer" class="icon-btn">✕</button>
+    </div>
+    <div class="drawer-nav">
+      <button data-page="home">⌂ Trang chủ</button>
+      <button data-page="transactions">↕ Giao dịch</button>
+      <button data-page="stats">⌁ Thống kê</button>
+      <button data-page="goals">◎ Mục tiêu</button>
+      <button data-page="loans">◌ Khoản vay</button>
+      <button data-page="subscriptions">◫ Subscription</button>
+      <button data-page="wallets">▣ Ví & Tài sản</button>
+      <button data-page="banks">▤ Ngân hàng</button>
+      <button data-page="settings">⚙ Cài đặt</button>
+    </div>
+    <button id="logoutBtn" class="danger ghost">Đăng xuất</button>
+  </aside>
+  <div id="backdrop" class="backdrop"></div>
+
+  <section id="micOverlay" class="mic-overlay hidden">
+    <div class="mic-card glass">
+      <div class="mic-orb">🎙</div>
+      <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <strong>Đang nghe...</strong>
+      <div id="micTimer">0:00</div>
+      <p id="micTranscript">Nói: “chi 45 nghìn cà phê”</p>
+      <small>(Tự dừng sau 3 giây im lặng)</small>
+      <button id="stopMicBtn" class="secondary">Dừng</button>
+    </div>
+  </section>
+
+  <section id="sheet" class="sheet" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2 id="sheetTitle">Thêm giao dịch</h2><button id="closeSheet" class="icon-btn">✕</button></div>
+    <div id="sheetBody"></div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+  <div id="confirmCard" class="confirm-card hidden"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
