@@ -1,4 +1,4 @@
--- LUMINA Money v1.5.7 - Email/Password Auth + per-user RLS.
+-- LUMINA Money v1.5.8 - Email/Password Auth + per-user RLS.
 -- Chạy toàn bộ file này trong Supabase SQL Editor của CHÍNH dự án Supabase chủ app.
 -- Người dùng cuối đăng ký/đăng nhập bằng email + mật khẩu qua Supabase Auth; họ KHÔNG cần tài khoản quản trị Supabase.
 -- Tất cả người dùng dùng chung database, nhưng RLS khóa từng hàng theo auth.uid().
@@ -154,3 +154,14 @@ end $$;
 -- 3) Authentication > URL Configuration: Site URL = domain Vercel; thêm domain Vercel vào Redirect URLs.
 -- 4) Không cần bật Google Provider, không cần Google Cloud, Client ID hay Client Secret.
 -- 5) Frontend chỉ dùng Project URL + anon/publishable key. Tuyệt đối không đưa service_role key lên GitHub/Vercel frontend.
+
+
+-- QUAN TRỌNG: cấp quyền bảng cho người dùng đã đăng nhập.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+alter default privileges in schema public grant select, insert, update, delete on tables to authenticated;
+alter default privileges in schema public grant usage, select on sequences to authenticated;
+
+-- Nếu đã từng gặp lỗi "permission denied for table transactions",
+-- hãy chạy lại toàn bộ file SQL v1.5.8 này rồi đăng xuất/đăng nhập lại trong app.

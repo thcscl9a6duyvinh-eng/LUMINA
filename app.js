@@ -1,4 +1,4 @@
-const APP_VERSION = '1.5.7';
+const APP_VERSION = '1.5.8';
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const UPDATE_PROGRESS_DURATION_MS = 15000;
 
@@ -625,3 +625,117 @@ async function initUpdateGate(){
 
 initUpdateGate();
 init();
+
+
+/* ===== LUMINA v1.5.8 runtime fixes & UI consistency ===== */
+function luminaIcon(name, cls=''){
+  const icons={
+    home:`<path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V20h14V9.5"></path>`,
+    stats:`<path d="M5 19V11"></path><path d="M12 19V5"></path><path d="M19 19v-8"></path><path d="M3 19h18"></path>`,
+    mic:`<rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path><path d="M8 21h8"></path>`,
+    goals:`<circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2.5"></circle><path d="M19 5 14.5 9.5"></path>`,
+    wallet:`<path d="M4 7h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4z"></path><path d="M4 9V6a2 2 0 0 1 2-2h10"></path><path d="M16 13h4"></path>`,
+    bell:`<path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"></path><path d="M10 21a2 2 0 0 0 4 0"></path>`,
+    income:`<path d="M12 19V5"></path><path d="m7 10 5-5 5 5"></path><path d="M5 19h14"></path>`,
+    expense:`<path d="M12 5v14"></path><path d="m17 14-5 5-5-5"></path><path d="M5 5h14"></path>`,
+    saving:`<path d="M12 3 19 12 12 21 5 12 12 3Z"></path><path d="M12 8v8"></path>`,
+    bank:`<path d="M3 10h18"></path><path d="M5 10v8"></path><path d="M10 10v8"></path><path d="M14 10v8"></path><path d="M19 10v8"></path><path d="M2 20h20"></path><path d="M12 3 3 7v2h18V7Z"></path>`,
+    loan:`<rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 10h8"></path><path d="M8 14h5"></path>`,
+    subscription:`<path d="M17 1v4"></path><path d="M7 1v4"></path><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="m8 15 2 2 4-4"></path>`,
+    settings:`<path d="M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 1 0 12 8.5z"></path><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 8.4 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.8a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 8.4a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6c.39 0 .76-.14 1.04-.4.28-.26.46-.62.46-1V3a2 2 0 1 1 4 0v.1c0 .39.18.74.46 1 .28.26.65.4 1.04.4.7 0 1.37-.27 1.87-.76l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .39.14.76.4 1.04.26.28.62.46 1 .46h.1a2 2 0 1 1 0 4h-.1c-.39 0-.74.18-1 .46-.26.28-.4.65-.4 1.04Z"></path>`,
+    trash:`<path d="M4 7h16"></path><path d="M10 11v5"></path><path d="M14 11v5"></path><path d="M6 7l1 12h10l1-12"></path><path d="M9 7V4h6v3"></path>`,
+    plus:`<path d="M12 5v14"></path><path d="M5 12h14"></path>`,
+    sync:`<path d="M20 6v6h-6"></path><path d="M4 18v-6h6"></path><path d="M7 8a7 7 0 0 1 11-2"></path><path d="M17 16a7 7 0 0 1-11 2"></path>`,
+    eye:`<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle>`,
+    leaf:`<path d="M18 4c-4 0-8 2-10 5-1.3 1.8-1.7 4-1 6 2-.6 4-.2 5.9-.7 3.4-.9 5.1-4.1 5.1-10Z"></path><path d="M8 20c1.2-3.2 3.8-5.7 7-7"></path>`,
+    rain:`<path d="M7 17 6 19"></path><path d="M12 17l-1 2"></path><path d="M17 17l-1 2"></path><path d="M6 14a4 4 0 0 1 .6-8A5.5 5.5 0 0 1 17 7.5 3.5 3.5 0 1 1 17.5 14Z"></path>`,
+    alert:`<path d="M12 4 3 20h18L12 4Z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path>`
+  };
+  return `<svg viewBox="0 0 24 24" class="nav-svg ${cls}" aria-hidden="true">${icons[name]||icons.wallet}</svg>`;
+}
+function moodText(m){ return m==='angry'?'Đang cảnh báo':m==='sad'?'Cần chú ý':'Đang ổn định'; }
+function assistantMessage(mood){
+  const s=sums();
+  if(mood==='angry') return 'Cảnh báo!<br>Đã vượt thu nhập.';
+  if(mood==='sad') return 'Chi tiêu đang cao.<br>Xem lại nhé.';
+  if(s.income===0 && s.expense===0) return 'Xin chào!<br>Thêm giao dịch đầu tiên.';
+  return 'Tốt lắm!<br>Chi tiêu đang ổn.';
+}
+function renderHome(){
+  const s=sums(), prev=previousMonthSums(); const balance=s.income-s.expense-s.saving; const prevBal=prev.income-prev.expense-prev.saving; const delta=balance-prevBal;
+  const mood=state.listening?'happy':robotMood(); state.robot=mood;
+  const recent=[...state.transactions].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at)).slice(0,5);
+  const moodDecor = mood==='happy'?luminaIcon('leaf'):mood==='sad'?luminaIcon('rain'):luminaIcon('alert');
+  return `
+    <div class="assistant-zone">
+      <div class="weather-mood">${moodDecor}</div>
+      ${state.listening?'<div class="listen-badge">🎙 Tôi đang nghe bạn...</div>':''}
+      <div class="robot-wrap" id="robotWrap"><div class="holo"></div><img id="robotImg" class="robot-img robot-${mood} ${state.listening?'listening':''}" alt="Lumina assistant"></div>
+      ${state.settings.bubbles!==false?`<div class="speech-bubble ${mood==='angry'?'warning':''}">${assistantMessage(mood)}</div>`:''}
+      <div class="assistant-state ${mood}">${moodText(mood)}</div>
+    </div>
+    <div class="balance-card">
+      <div><div class="card-label">Số dư hiện tại ${luminaIcon('eye')}</div><div class="amount-main ${balance<0?'negative':''}">${fmt(balance)}</div></div>
+      <div class="trend ${delta<0?'negative':''}"><strong>${delta>=0?'↑':'↓'} ${fmt(Math.abs(delta))}</strong>so với tháng trước</div>
+    </div>
+    <div class="stat-grid">
+      <div class="mini-card income"><div class="ico">${luminaIcon('income')}</div><small>Thu nhập</small><strong>${fmt(s.income)}</strong></div>
+      <div class="mini-card expense"><div class="ico">${luminaIcon('expense')}</div><small>Chi tiêu</small><strong>${fmt(s.expense)}</strong></div>
+      <div class="mini-card saving"><div class="ico">${luminaIcon('saving')}</div><small>${balance<0?'Vượt mức':'Tiết kiệm'}</small><strong>${fmt(balance<0?Math.abs(balance):s.saving)}</strong></div>
+    </div>
+    <div class="transaction-wrap">
+      <div class="section-title"><h3>Giao dịch gần đây</h3><button class="text-action" data-go="transactions">Xem tất cả</button></div>
+      <div class="transaction-panel"><div class="tx-list">${recent.length?recent.map(txHtml).join(''):'<div class="empty">Chưa có giao dịch.<br>Nhấn micro hoặc thêm thủ công.</div>'}</div></div>
+    </div>`;
+}
+function txHtml(t){
+  const cls=t.kind||'expense', sign=cls==='income'?'+':cls==='expense'?'-':'↗';
+  const iconKey=cls==='income'?'income':cls==='saving'?'saving':'expense';
+  const d=new Date(t.occurred_at||t.created_at||Date.now());
+  return `<div class="tx" data-tx="${t.id}"><div class="tx-icon ${cls}">${luminaIcon(iconKey)}</div><div><div class="tx-name">${escapeHtml(t.note||t.category||'Giao dịch')}</div><div class="tx-meta">${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${escapeHtml(t.category||'Khác')}${t.account?' · '+escapeHtml(t.account):''}</div></div><div class="tx-amount ${cls==='income'?'positive':cls==='expense'?'negative':''}">${sign} ${fmt(t.amount)}</div></div>`;
+}
+function catHtml(cat,val,total,i){const keys=['expense','wallet','goals','stats','saving','bank'];const pct=total?Math.round(val/total*100):0;return `<div class="cat-row"><div class="tx-icon expense">${luminaIcon(keys[i%keys.length])}</div><div class="cat-main"><span>${escapeHtml(cat)}</span><strong>${pct}%</strong><div class="cat-progress"><i style="width:${pct}%"></i></div></div><div class="cat-amount">${fmtShort(val)}</div></div>`}
+function entityPage(title,kind,arr,mapFn){return `<div class="page-head"><h2>${title}</h2><button class="add-btn" data-add="${kind}">${luminaIcon('plus')}<span>Thêm</span></button></div><div class="panel list-card">${arr.length?arr.map(x=>{const r=mapFn(x);const table=kind==='wallet'?'wallets':kind==='loan'?'loans':'subscriptions';return `<div class="entity-row"><div class="entity-icon">${luminaIcon(r.iconKey||'wallet')}</div><div><h4>${escapeHtml(r.title)}</h4><p>${escapeHtml(r.meta)}</p></div><div><strong>${r.value}</strong><div class="row-actions"><button class="mini-action" data-del="${table}:${x.id}">${luminaIcon('trash')} Xóa</button></div></div></div>`}).join(''):'<div class="empty">Chưa có dữ liệu.</div>'}</div>`}
+function renderWallets(){return entityPage('Ví & Tài sản','wallet',state.wallets,w=>({iconKey:'wallet',title:w.name,meta:w.type||'Ví',value:fmt(w.balance)}));}
+function renderLoans(){return entityPage('Khoản vay','loan',state.loans,l=>({iconKey:'loan',title:l.name,meta:`Còn ${fmt(l.remaining)} · Hạn ${l.due_date||'—'}`,value:fmt(l.principal)}));}
+function renderSubscriptions(){return entityPage('Subscription','subscription',state.subscriptions,s=>({iconKey:'subscription',title:s.name,meta:`${s.billing_cycle==='yearly'?'Hàng năm':'Hàng tháng'} · Kỳ tới ${s.next_charge||'—'}`,value:fmt(s.amount)}));}
+function renderBanks(){
+  const rows=state.bank_accounts.map(b=>`<div class="entity-row"><div class="entity-icon">${luminaIcon('bank')}</div><div><h4>${escapeHtml(b.bank_name)}</h4><p>${escapeHtml(b.account_label||'Tài khoản')} · **** ${escapeHtml(b.last4||'')}</p></div><div><strong>${b.enabled?'Đang dùng':'Tắt'}</strong><div class="row-actions"><button class="mini-action" data-del="bank_accounts:${b.id}">${luminaIcon('trash')} Xóa</button></div></div></div>`).join('');
+  return `<div class="page-head"><h2>Ngân hàng</h2><button class="add-btn" data-add="bank">${luminaIcon('plus')}<span>Thêm</span></button></div><div class="notice">Trên iPhone, web app không thể đọc thông báo nền của ứng dụng ngân hàng khác. Trang này dùng để quản lý tài khoản ngân hàng và nhập giao dịch thủ công/giọng nói.</div><div class="panel list-card">${rows||'<div class="empty">Chưa có tài khoản ngân hàng.</div>'}</div>`;
+}
+function renderTransactions(){const all=[...state.transactions].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at));return `<div class="page-head"><h2>Giao dịch</h2><button class="add-btn" data-add="transaction">${luminaIcon('plus')}<span>Thêm</span></button></div><div class="panel list-card">${all.length?all.map(t=>`<div>${txHtml(t)}<div class="row-actions" style="justify-content:flex-end"><button class="mini-action" data-del="transactions:${t.id}">${luminaIcon('trash')} Xóa</button></div></div>`).join(''):'<div class="empty">Chưa có giao dịch.</div>'}</div>`;}
+function renderSettings(){return `<div class="page-head"><h2>Cài đặt</h2></div><div class="panel"><div class="setting-row"><div><strong>Tài khoản đăng nhập</strong><small>Email + mật khẩu</small></div><span>✓</span></div><div class="setting-row"><div><strong>Phiên bản</strong><small>LUMINA Money · Update Gate thủ công</small></div><span>v${APP_VERSION}</span></div><div class="setting-row"><div><strong>Cập nhật</strong><small>Kiểm tra bản deploy mới, không tự cài.</small></div><button class="mini-action" data-check-update>${luminaIcon('sync')} Kiểm tra</button></div><div class="setting-row"><div><strong>Hiển thị bubble AI</strong><small>Bật/tắt lời thoại nổi của trợ lý</small></div><button class="mini-action" data-toggle="bubbles">${state.settings.bubbles!==false?'Đang bật':'Đang tắt'}</button></div></div>`;}
+function dbFriendlyError(error){
+  const raw=String(error?.message||error||'').trim();
+  const msg=raw.toLowerCase();
+  if(msg.includes('permission denied')||msg.includes('row-level security')) return 'Tài khoản chưa có quyền ghi dữ liệu. Hãy chạy lại file supabase.sql v1.5.8 trong Supabase rồi đăng xuất/đăng nhập lại.';
+  if(msg.includes('jwt')||msg.includes('auth')) return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.';
+  if(msg.includes('violates foreign key')) return 'Tài khoản chưa được khởi tạo đầy đủ. Hãy đăng xuất rồi đăng nhập lại một lần.';
+  return raw || 'Có lỗi dữ liệu xảy ra. Vui lòng thử lại.';
+}
+async function dbInsert(table,row){
+  const item={...row,id:row.id||crypto.randomUUID(),user_id:uid()};
+  if(state.demo){ state[table].unshift(item); demoSave(); render(); return item; }
+  const {data,error}=await sb.from(table).insert({...row,user_id:uid()}).select().single();
+  if(error){const m=dbFriendlyError(error); toast(m); throw new Error(m)}
+  await refreshAll(); return data;
+}
+async function dbUpdate(table,id,patch){
+  if(state.demo){ const i=state[table].findIndex(x=>x.id===id); if(i>=0) state[table][i]={...state[table][i],...patch}; demoSave(); render(); return; }
+  const {error}=await sb.from(table).update(patch).eq('id',id).eq('user_id',uid()); if(error){const m=dbFriendlyError(error); toast(m); throw new Error(m)} await refreshAll();
+}
+async function dbDelete(table,id){
+  if(state.demo){ state[table]=state[table].filter(x=>x.id!==id); demoSave(); render(); return; }
+  const {error}=await sb.from(table).delete().eq('id',id).eq('user_id',uid()); if(error){const m=dbFriendlyError(error); toast(m); throw new Error(m)} await refreshAll();
+}
+function genericForm(title,fields,handler){
+  openSheet(title,`<form><div class="form-grid">${fields}</div><div class="sheet-actions"><button type="button" class="secondary" onclick="document.querySelector('#closeSheet').click()">Hủy</button><button class="primary" type="submit">Lưu</button></div></form>`,async e=>{e.preventDefault();try{await handler(new FormData(e.target));closeSheet();toast('Đã lưu')}catch(err){console.warn(err)}});
+}
+function transactionForm(prefill={}){
+  const dt=(prefill.occurred_at?new Date(prefill.occurred_at):new Date()); const local=new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  openSheet('Thêm giao dịch',`<form id="txForm"><div class="form-grid"><div class="full"><div class="segmented" id="kindSeg"><button type="button" data-kind="income" class="${prefill.kind==='income'?'active':''}">Thu nhập</button><button type="button" data-kind="expense" class="${!prefill.kind||prefill.kind==='expense'?'active':''}">Chi tiêu</button><button type="button" data-kind="saving" class="${prefill.kind==='saving'?'active':''}">Tiết kiệm</button></div><input type="hidden" name="kind" value="${prefill.kind||'expense'}"></div><label>Số tiền<input name="amount" type="number" inputmode="numeric" min="1" required value="${prefill.amount||''}"></label><label>Danh mục<input name="category" required value="${escapeAttr(prefill.category||'Ăn uống')}"></label><label class="full">Nội dung<input name="note" required value="${escapeAttr(prefill.note||'')}"></label><label>Tài khoản<input name="account" value="${escapeAttr(prefill.account||'Tiền mặt')}"></label><label>Thời gian<input name="occurred_at" type="datetime-local" value="${local}"></label></div><div class="sheet-actions"><button type="button" class="secondary" onclick="document.querySelector('#closeSheet').click()">Hủy</button><button class="primary" type="submit">Ghi nhận</button></div></form>`,async e=>{e.preventDefault();const fd=new FormData(e.target);const rawDate=fd.get('occurred_at');const item={kind:fd.get('kind'),amount:+fd.get('amount'),category:fd.get('category'),note:fd.get('note'),account:fd.get('account'),occurred_at:rawDate?new Date(rawDate).toISOString():nowIso()};try{await dbInsert('transactions',item);closeSheet();showConfirm(item)}catch(err){console.warn(err)}});
+  $$('#kindSeg button').forEach(b=>b.onclick=()=>{$$('#kindSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txForm [name=kind]').value=b.dataset.kind});
+}
+async function addVoiceTransaction(item){ try{await dbInsert('transactions',item);showConfirm(item);toast('Đã ghi nhận giao dịch bằng giọng nói');}catch(err){console.warn(err)}finally{stopListening()} }
+function showConfirm(item){ const c=$('#confirmCard'); const icon=item.kind==='income'?'income':item.kind==='saving'?'saving':'expense'; c.innerHTML=`<h3>✅ Đã ghi nhận giao dịch!</h3><div class="confirm-row"><div class="tx-icon ${item.kind}">${luminaIcon(icon)}</div><div><p>${escapeHtml(item.note)}</p><small>${escapeHtml(item.category)}</small></div><strong class="${item.kind==='income'?'positive':'negative'}">${item.kind==='income'?'+':item.kind==='expense'?'-':'↗'} ${fmt(item.amount)}</strong></div>`; c.classList.remove('hidden'); clearTimeout(c._timer); c._timer=setTimeout(()=>c.classList.add('hidden'),2200);}
+function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.remove('show');void t.offsetWidth;t.classList.add('show');clearTimeout(t._timer);clearTimeout(t._clear);t._timer=setTimeout(()=>t.classList.remove('show'),2600);t._clear=setTimeout(()=>{if(!t.classList.contains('show')) t.textContent='';},3200)}
