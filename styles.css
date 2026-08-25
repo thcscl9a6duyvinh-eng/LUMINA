@@ -345,3 +345,139 @@ html,body{background:#06162f}
   .assistant-bubble-row.mood-angry{padding-left:50%;}
   .speech-bubble{font-size:9px;min-height:48px;}
 }
+
+
+/* v1.5.14 robot prominence + no-overlap bubble layout */
+.assistant-zone{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,58%) minmax(120px,42%);
+  grid-template-areas:
+    'robot bubble'
+    'state bubble';
+  align-items:center;
+  column-gap:6px;
+  row-gap:4px;
+  min-height:246px;
+  padding:8px 0 4px;
+  overflow:visible;
+}
+.robot-wrap{
+  grid-area:robot;
+  justify-self:start;
+  align-self:end;
+  width:min(238px,60vw) !important;
+  height:205px;
+  margin-left:-10px;
+  transform:translateX(-10px);
+  z-index:2;
+}
+.robot-img{width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 0 18px rgba(48,210,255,.35));}
+.assistant-bubble-row{
+  grid-area:bubble;
+  width:100%;
+  min-height:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding:0 4px 0 0;
+  pointer-events:none;
+  z-index:3;
+}
+.assistant-zone.mood-happy .assistant-bubble-row{align-self:start; margin-top:8px;}
+.assistant-zone.mood-sad .assistant-bubble-row{align-self:center; margin-top:0;}
+.assistant-zone.mood-angry .assistant-bubble-row{align-self:start; margin-top:18px;}
+.speech-bubble{
+  position:relative !important;
+  inset:auto !important;
+  transform:none !important;
+  width:100%;
+  max-width:180px !important;
+  min-height:58px;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border-radius:18px 18px 18px 8px;
+}
+.speech-bubble::after{
+  content:'';
+  position:absolute;
+  left:-8px;
+  bottom:18px;
+  width:14px;
+  height:14px;
+  background:inherit;
+  border-left:1px solid rgba(79,193,255,.22);
+  border-bottom:1px solid rgba(79,193,255,.22);
+  transform:rotate(45deg);
+}
+.speech-bubble.warning::after{border-left-color:rgba(255,92,118,.35);border-bottom-color:rgba(255,92,118,.35);}
+.assistant-state{
+  grid-area:state;
+  justify-self:center;
+  align-self:start;
+  position:relative !important;
+  left:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+  margin-top:-4px;
+  z-index:3;
+}
+.listen-badge{
+  left:22%;
+  top:4%;
+  transform:none;
+  z-index:5;
+}
+.weather-mood{
+  left:0;
+  top:22%;
+  z-index:4;
+}
+.assistant-fx{
+  position:absolute;
+  left:0;
+  top:0;
+  width:62%;
+  height:100%;
+  pointer-events:none;
+  z-index:1;
+}
+.assistant-fx i{
+  position:absolute;
+  display:block;
+}
+/* happy fx: sparkles */
+.assistant-fx.mood-happy i:nth-child(1){left:8%; top:28%; width:10px; height:10px; background:linear-gradient(135deg,#b7ff8c,#37f6c0); transform:rotate(45deg); border-radius:2px; box-shadow:0 0 14px rgba(100,255,210,.8); animation:fxHappyFloat 2.6s ease-in-out infinite;}
+.assistant-fx.mood-happy i:nth-child(2){left:18%; top:54%; width:7px; height:7px; background:#74f0ff; border-radius:50%; box-shadow:0 0 12px rgba(116,240,255,.75); animation:fxHappyFloat 2.1s ease-in-out infinite .35s;}
+.assistant-fx.mood-happy i:nth-child(3){left:58%; top:22%; width:12px; height:12px; background:linear-gradient(135deg,#ffd96e,#79e9ff); transform:rotate(45deg); border-radius:2px; box-shadow:0 0 14px rgba(121,233,255,.8); animation:fxHappyFloat 2.8s ease-in-out infinite .5s;}
+.assistant-fx.mood-happy i:nth-child(4){left:66%; top:50%; width:8px; height:8px; background:#8fffdf; border-radius:50%; box-shadow:0 0 10px rgba(143,255,223,.8); animation:fxHappyFloat 2.2s ease-in-out infinite .8s;}
+@keyframes fxHappyFloat{0%,100%{transform:translateY(0) scale(.9) rotate(45deg);opacity:.55}50%{transform:translateY(-8px) scale(1.12) rotate(45deg);opacity:1}}
+/* sad fx: droplets */
+.assistant-fx.mood-sad i{width:7px;height:11px;border-radius:50% 50% 60% 60%/45% 45% 55% 55%;background:linear-gradient(180deg,#b9e8ff,#53b8ff);box-shadow:0 0 10px rgba(83,184,255,.55)}
+.assistant-fx.mood-sad i:nth-child(1){left:12%; top:26%; animation:fxSadDrop 2.5s linear infinite;}
+.assistant-fx.mood-sad i:nth-child(2){left:28%; top:18%; animation:fxSadDrop 2.1s linear infinite .5s;}
+.assistant-fx.mood-sad i:nth-child(3){left:54%; top:24%; animation:fxSadDrop 2.3s linear infinite .25s;}
+.assistant-fx.mood-sad i:nth-child(4){left:68%; top:16%; animation:fxSadDrop 2.7s linear infinite .7s;}
+@keyframes fxSadDrop{0%{transform:translateY(0) scale(.9);opacity:0}15%{opacity:.95}100%{transform:translateY(22px) scale(1);opacity:0}}
+/* angry fx: pulses and sparks */
+.assistant-fx.mood-angry i:nth-child(1),.assistant-fx.mood-angry i:nth-child(2){width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,120,140,.9);box-shadow:0 0 18px rgba(255,76,96,.6);}
+.assistant-fx.mood-angry i:nth-child(1){left:10%;top:28%;animation:fxAngryPulse 1.3s ease-out infinite;}
+.assistant-fx.mood-angry i:nth-child(2){left:58%;top:24%;animation:fxAngryPulse 1.3s ease-out infinite .45s;}
+.assistant-fx.mood-angry i:nth-child(3),.assistant-fx.mood-angry i:nth-child(4){width:10px;height:10px;background:linear-gradient(135deg,#ffcf6e,#ff5c76);transform:rotate(45deg);box-shadow:0 0 16px rgba(255,92,118,.75);clip-path:polygon(50% 0%, 65% 38%, 100% 40%, 74% 61%, 82% 100%, 50% 76%, 18% 100%, 26% 60%, 0% 40%, 35% 38%);}
+.assistant-fx.mood-angry i:nth-child(3){left:22%;top:52%;animation:fxAngrySpark 1.2s ease-in-out infinite .2s;}
+.assistant-fx.mood-angry i:nth-child(4){left:68%;top:50%;animation:fxAngrySpark 1.2s ease-in-out infinite .7s;}
+@keyframes fxAngryPulse{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.55);opacity:0}}
+@keyframes fxAngrySpark{0%,100%{transform:translateY(0) rotate(45deg) scale(.85);opacity:.55}50%{transform:translateY(-6px) rotate(55deg) scale(1.08);opacity:1}}
+@media(max-width:430px){
+  .assistant-zone{grid-template-columns:minmax(0,60%) minmax(112px,40%); min-height:238px;}
+  .robot-wrap{width:min(232px,61vw) !important; height:198px; margin-left:-8px; transform:translateX(-8px);}
+  .speech-bubble{max-width:170px !important; min-height:54px; font-size:10px; line-height:1.25;}
+}
+@media(max-width:390px){
+  .assistant-zone{grid-template-columns:minmax(0,61%) minmax(108px,39%);}
+  .robot-wrap{width:min(224px,62vw) !important; height:190px; margin-left:-6px; transform:translateX(-6px);}
+  .speech-bubble{max-width:158px !important; min-height:50px; font-size:9px; padding:8px 10px;}
+}
