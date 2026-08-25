@@ -258,3 +258,90 @@ html,body{background:#06162f}
 .notification-list{display:grid;gap:8px;max-height:54dvh;overflow:auto}.notification-item{padding:11px;border-radius:13px;border:1px solid rgba(75,183,255,.15);background:#082744;display:grid;grid-template-columns:28px 1fr;gap:9px}.notification-item.unread{border-color:rgba(255,76,96,.32);box-shadow:inset 3px 0 0 #ff4f67}.notification-item h4{margin:0;font-size:10px}.notification-item p{margin:4px 0 0;color:#9bb5ce;font-size:9px;line-height:1.4}.notification-item time{display:block;margin-top:4px;font-size:8px;color:#6687a7}.notification-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .ai-tone-note{font-size:8px;color:#6687a7;text-align:center;margin-top:4px}
 @media(max-height:740px){.bottom-nav{height:calc(66px + var(--safe-bottom-ui))!important}.screen{height:calc(100dvh - var(--topbar-base) - var(--safe-top) - 66px - var(--safe-bottom-ui))!important}}
+
+
+/* v1.5.13 assistant bubble layout fix: never cover robot */
+.assistant-zone{
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:auto auto auto;
+  justify-items:center;
+  align-items:end;
+  row-gap:6px;
+  min-height:0;
+  padding-top:6px;
+}
+.assistant-bubble-row{
+  width:100%;
+  min-height:56px;
+  display:flex;
+  align-items:flex-start;
+  pointer-events:none;
+  z-index:2;
+}
+.assistant-bubble-row.mood-happy{
+  justify-content:flex-end;
+  padding:0 6px 0 40%;
+}
+.assistant-bubble-row.mood-sad{
+  justify-content:flex-start;
+  padding:0 40% 0 6px;
+}
+.assistant-bubble-row.mood-angry{
+  justify-content:flex-end;
+  padding:0 4px 0 44%;
+}
+.speech-bubble{
+  position:relative !important;
+  inset:auto !important;
+  transform:none !important;
+  max-width:100% !important;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.speech-bubble::after{
+  content:'';
+  position:absolute;
+  bottom:-8px;
+  width:14px;
+  height:14px;
+  background:inherit;
+  border-right:1px solid rgba(79,193,255,.22);
+  border-bottom:1px solid rgba(79,193,255,.22);
+  transform:rotate(45deg);
+  z-index:-1;
+}
+.bubble-happy::after,.bubble-angry::after{right:18px;}
+.bubble-sad::after{left:18px;}
+.speech-bubble.warning::after{border-right-color:rgba(255,92,118,.35);border-bottom-color:rgba(255,92,118,.35);}
+.robot-wrap{
+  grid-row:2;
+  width:min(212px,54vw);
+  z-index:1;
+}
+.assistant-state{
+  position:relative !important;
+  left:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+  margin-top:-6px;
+  z-index:2;
+}
+.listen-badge{z-index:3;}
+.weather-mood{top:20%;left:2px;z-index:2}
+@media (max-width:430px){
+  .assistant-bubble-row.mood-happy{padding-left:42%;}
+  .assistant-bubble-row.mood-sad{padding-right:42%;}
+  .assistant-bubble-row.mood-angry{padding-left:46%;}
+  .speech-bubble{font-size:10px;line-height:1.25;padding:8px 10px;}
+}
+@media (max-width:390px){
+  .assistant-bubble-row.mood-happy{padding-left:46%;}
+  .assistant-bubble-row.mood-sad{padding-right:46%;}
+  .assistant-bubble-row.mood-angry{padding-left:50%;}
+  .speech-bubble{font-size:9px;min-height:48px;}
+}
