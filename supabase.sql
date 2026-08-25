@@ -1,4 +1,4 @@
--- LUMINA Money v1.5.8 - Email/Password Auth + per-user RLS.
+-- LUMINA Money v1.5.9 - Email/Password Auth + per-user RLS.
 -- Chạy toàn bộ file này trong Supabase SQL Editor của CHÍNH dự án Supabase chủ app.
 -- Người dùng cuối đăng ký/đăng nhập bằng email + mật khẩu qua Supabase Auth; họ KHÔNG cần tài khoản quản trị Supabase.
 -- Tất cả người dùng dùng chung database, nhưng RLS khóa từng hàng theo auth.uid().
@@ -164,4 +164,120 @@ alter default privileges in schema public grant select, insert, update, delete o
 alter default privileges in schema public grant usage, select on sequences to authenticated;
 
 -- Nếu đã từng gặp lỗi "permission denied for table transactions",
--- hãy chạy lại toàn bộ file SQL v1.5.8 này rồi đăng xuất/đăng nhập lại trong app.
+-- hãy chạy lại toàn bộ file SQL v1.5.9 này rồi đăng xuất/đăng nhập lại trong app.
+
+-- ===== LUMINA v1.5.9 migrations =====
+-- Giao dịch bắt buộc gắn với một Ví & Tài sản của chính người dùng.
+alter table public.transactions add column if not exists wallet_id uuid references public.wallets(id) on delete set null;
+create index if not exists idx_transactions_wallet on public.transactions(wallet_id);
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  body text,
+  type text not null default 'info',
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_notifications_user_date on public.notifications(user_id, created_at desc);
+alter table public.notifications enable row level security;
+alter table public.notifications force row level security;
+drop policy if exists notifications_own_all on public.notifications;
+create policy notifications_own_all on public.notifications
+for all to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on public.notifications to authenticated;
+grant select, insert, update, delete on public.transactions to authenticated;
+grant select, insert, update, delete on public.wallets to authenticated;
+
+-- Ghi giao dịch và cập nhật số dư ví trong CÙNG một transaction DB.
+create or replace function public.record_transaction(
+  p_kind text,
+  p_amount numeric,
+  p_category text,
+  p_note text,
+  p_wallet_id uuid,
+  p_occurred_at timestamptz default now()
+)
+returns setof public.transactions
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_wallet public.wallets%rowtype;
+  v_id uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'INVALID_AMOUNT';
+  end if;
+  if p_kind not in ('income','expense','saving') then
+    raise exception 'INVALID_KIND';
+  end if;
+
+  select * into v_wallet
+  from public.wallets
+  where id = p_wallet_id and user_id = auth.uid()
+  for update;
+
+  if not found then
+    raise exception 'WALLET_REQUIRED';
+  end if;
+
+  insert into public.transactions(user_id,kind,amount,category,note,account,wallet_id,occurred_at)
+  values(auth.uid(),p_kind,p_amount,coalesce(nullif(p_category,''),'Khác'),p_note,v_wallet.name,v_wallet.id,coalesce(p_occurred_at,now()))
+  returning id into v_id;
+
+  update public.wallets
+  set balance = balance + case when p_kind='income' then p_amount else -p_amount end
+  where id=v_wallet.id and user_id=auth.uid();
+
+  return query select * from public.transactions where id=v_id and user_id=auth.uid();
+end;
+$$;
+
+grant execute on function public.record_transaction(text,numeric,text,text,uuid,timestamptz) to authenticated;
+
+-- Xóa giao dịch và hoàn nguyên số dư ví.
+create or replace function public.delete_transaction(p_transaction_id uuid)
+returns boolean
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_tx public.transactions%rowtype;
+begin
+  if auth.uid() is null then raise exception 'AUTH_REQUIRED'; end if;
+
+  select * into v_tx
+  from public.transactions
+  where id=p_transaction_id and user_id=auth.uid()
+  for update;
+
+  if not found then return false; end if;
+
+  delete from public.transactions where id=v_tx.id and user_id=auth.uid();
+
+  if v_tx.wallet_id is not null then
+    update public.wallets
+    set balance = balance + case when v_tx.kind='income' then -v_tx.amount else v_tx.amount end
+    where id=v_tx.wallet_id and user_id=auth.uid();
+  end if;
+  return true;
+end;
+$$;
+
+grant execute on function public.delete_transaction(uuid) to authenticated;
+
+-- Realtime cho chuông thông báo.
+do $$
+begin
+  begin alter publication supabase_realtime add table public.notifications; exception when duplicate_object then null; end;
+end $$;
