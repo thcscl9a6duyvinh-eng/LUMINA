@@ -1,4 +1,4 @@
-const APP_VERSION = '1.5.11';
+const APP_VERSION = '1.5.12';
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const UPDATE_PROGRESS_DURATION_MS = 15000;
 
@@ -203,10 +203,10 @@ function authMessage(error){
 }
 function dbFriendlyError(error){
   const raw=String(error?.message||error||'').trim(),msg=raw.toLowerCase();
-  if(msg.includes('permission denied')||msg.includes('row-level security'))return 'Thiếu quyền dữ liệu. Hãy chạy toàn bộ supabase.sql v1.5.11 rồi đăng xuất/đăng nhập lại.';
+  if(msg.includes('permission denied')||msg.includes('row-level security'))return 'Thiếu quyền dữ liệu. Hãy kiểm tra quyền dữ liệu Supabase rồi đăng xuất/đăng nhập lại.';
   if(msg.includes('wallet_required')||msg.includes('wallet_not_owned'))return 'Ví đã chọn không hợp lệ. Hãy chọn Ví & Tài sản của chính bạn.';
   if(msg.includes('auth_required')||msg.includes('jwt')||msg.includes('auth_session_missing')||msg.includes('refresh_token'))return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.';
-  if(msg.includes('schema cache'))return 'Supabase chưa nhận cấu trúc mới. Hãy chạy lại supabase.sql v1.5.11 và chờ khoảng 10 giây.';
+  if(msg.includes('schema cache'))return 'Ứng dụng và cấu trúc dữ liệu đang không khớp. Hãy cập nhật LUMINA lên bản mới nhất rồi thử lại.';
   return raw||'Có lỗi dữ liệu xảy ra.';
 }
 function showAuthStatus(message,type='info'){const el=$('#authStatus');if(!el)return;el.textContent=message||'';el.className=`auth-status ${type}`;if(!message)el.classList.add('hidden')}
@@ -434,7 +434,7 @@ function parseSpelledAmount(t){const numWords='(?:khong|mot|hai|ba|bon|tu|nam|la
 function parseAmount(text){const t=stripVN(text).replace(/,/g,'.');let m;m=t.match(/(\d+)\s*tr\s*(\d{1,3})(?!\d)/);if(m){const frac=Number(m[2])/Math.pow(10,m[2].length);return Math.round((Number(m[1])+frac)*1e6)}m=t.match(/(\d+(?:\.\d+)?)\s*(ty|ti)\b/);if(m)return Math.round(Number(m[1])*1e9);m=t.match(/(\d+(?:\.\d+)?)\s*(trieu|tr)\b/);if(m)return Math.round(Number(m[1])*1e6);m=t.match(/(\d+(?:\.\d+)?)\s*(nghin|ngan|k)\b/);if(m)return Math.round(Number(m[1])*1e3);m=t.match(/\b\d{1,3}(?:[.\s]\d{3})+\b/);if(m)return Number(m[0].replace(/[.\s]/g,''));m=t.match(/\b\d{4,}\b/);if(m)return Number(m[0]);return parseSpelledAmount(t)}
 function parseVoice(raw){
   const t=stripVN(raw),amount=parseAmount(raw);if(!amount||amount<=0)return null;let kind='expense';if(/tiet kiem|de danh|bo heo|gui tiet kiem/.test(t))kind='saving';else if(/(^| )(thu|nhan|luong|thuong|duoc chuyen|duoc tra|ban duoc|doanh thu|hoan tien)( |$)/.test(t))kind='income';
-  let note=String(raw).replace(/\d+(?:[.,]\d+)?\s*(tỷ|ty|tỉ|ti|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)?/ig,' ').replace(/\s+/g,' ').trim();note=note.replace(/^\s*(thu|chi|nhận|nhan|trả|tra|thanh toán|thanh toan)\s+/i,'').trim()||(kind==='income'?'Thu nhập':kind==='saving'?'Tiết kiệm':'Chi tiêu');return {kind,amount,category:smartCategory(note,kind),note,occurred_at:nowIso(),raw_voice:raw};
+  let note=String(raw).replace(/\d+(?:[.,]\d+)?\s*(tỷ|ty|tỉ|ti|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)?/ig,' ').replace(/\s+/g,' ').trim();note=note.replace(/^\s*(thu|chi|nhận|nhan|trả|tra|thanh toán|thanh toan)\s+/i,'').trim()||(kind==='income'?'Thu nhập':kind==='saving'?'Tiết kiệm':'Chi tiêu');return {kind,amount,category:smartCategory(note,kind),note,occurred_at:nowIso()};
 }
 
 function transactionForm(prefill={}){
@@ -445,10 +445,32 @@ function transactionForm(prefill={}){
   });$('#sheetBody [data-cancel-sheet]').onclick=closeSheet;const refreshCat=()=>{$('#autoCategoryPreview').textContent=smartCategory($('#txNoteInput').value,$('#txForm [name=kind]').value)};$('#txNoteInput').addEventListener('input',refreshCat);$$('#kindSeg button').forEach(b=>b.onclick=()=>{$$('#kindSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txForm [name=kind]').value=b.dataset.kind;refreshCat()});
 }
 async function recordTransaction(item,walletId){
-  const wallet=(state.wallets||[]).find(w=>w.id===walletId);if(!wallet)throw new Error('Hãy chọn một Ví & Tài sản hợp lệ.');item={...item,category:smartCategory(item.note,item.kind),wallet_id:wallet.id,account:wallet.name};let saved;
-  if(state.demo){saved=await dbInsert('transactions',item,{refresh:false});const delta=item.kind==='income'?Number(item.amount):-Number(item.amount),w=state.wallets.find(x=>x.id===wallet.id);w.balance=Number(w.balance||0)+delta;demoSave();render()}
-  else{saved=await dbInsert('transactions',item,{refresh:false});await refreshAll()}
-  const line=setAssistantReaction(item);createNotification(item.kind==='income'?'Có tiền vào':'Giao dịch mới',`${item.note}: ${item.kind==='income'?'+':item.kind==='saving'?'↗':'-'}${fmt(item.amount)} · ${item.category}. ${line}`,item.kind==='income'?'income':'transaction').catch(()=>{});if(state.page!=='home')navigate('home');else render();return saved||item;
+  const wallet=(state.wallets||[]).find(w=>w.id===walletId);
+  if(!wallet)throw new Error('Hãy chọn một Ví & Tài sản hợp lệ.');
+  // Chỉ gửi đúng các cột tồn tại trong bảng transactions. Không để metadata voice/debug lọt vào PostgREST.
+  const cleanItem={
+    kind:item.kind,
+    amount:Number(item.amount),
+    category:smartCategory(item.note,item.kind),
+    note:String(item.note||'').trim(),
+    wallet_id:wallet.id,
+    account:wallet.name,
+    occurred_at:item.occurred_at||nowIso()
+  };
+  if(!cleanItem.amount||cleanItem.amount<=0)throw new Error('Số tiền giao dịch không hợp lệ.');
+  let saved;
+  if(state.demo){
+    saved=await dbInsert('transactions',cleanItem,{refresh:false});
+    const delta=cleanItem.kind==='income'?cleanItem.amount:-cleanItem.amount,w=state.wallets.find(x=>x.id===wallet.id);
+    w.balance=Number(w.balance||0)+delta;demoSave();render();
+  }else{
+    saved=await dbInsert('transactions',cleanItem,{refresh:false});
+    await refreshAll();
+  }
+  const line=setAssistantReaction(cleanItem);
+  createNotification(cleanItem.kind==='income'?'Có tiền vào':'Giao dịch mới',`${cleanItem.note}: ${cleanItem.kind==='income'?'+':cleanItem.kind==='saving'?'↗':'-'}${fmt(cleanItem.amount)} · ${cleanItem.category}. ${line}`,cleanItem.kind==='income'?'income':'transaction').catch(()=>{});
+  if(state.page!=='home')navigate('home');else render();
+  return saved||cleanItem;
 }
 async function deleteTransaction(id){
   const tx=(state.transactions||[]).find(x=>x.id===id);if(!tx)return;
@@ -461,23 +483,70 @@ function chooseWalletForVoice(item){
   if((state.wallets||[]).length===1)return recordTransaction(item,state.wallets[0].id).then(()=>showConfirm(item)).catch(e=>toast(e.message));
   openSheet('Chọn tài khoản',`<div class="wallet-choice-list">${state.wallets.map(w=>`<button class="wallet-choice" data-wallet-choice="${w.id}"><span class="entity-icon">${luminaIcon('wallet')}</span><span><strong>${escapeHtml(w.name)}</strong><small>${escapeHtml(w.type||'Ví')}</small></span><em>${fmt(w.balance)}</em></button>`).join('')}</div>`);$$('#sheetBody [data-wallet-choice]').forEach(b=>b.onclick=async()=>{const id=b.dataset.walletChoice;closeSheet();try{await recordTransaction(item,id);showConfirm(item)}catch(e){toast(e.message)}});
 }
-function shutdownRecognition(){
-  clearTimeout(silenceTimer);clearInterval(micClock);silenceTimer=micClock=null;const r=recognition;recognition=null;if(r){r.onstart=r.onspeechstart=r.onresult=r.onerror=r.onend=null;try{r.abort()}catch{try{r.stop()}catch{}}}state.listening=false;$('#micOverlay')?.classList.add('hidden');
+function syncListeningVisuals(){
+  $('#micOverlay')?.classList.add('hidden');
+  $('#robotImg')?.classList.remove('listening');
+  $('.listen-badge')?.remove();
 }
-function stopListening(renderHomeAfter=true){shutdownRecognition();lastTranscript='';voiceFinishing=false;if(renderHomeAfter&&state.user&&state.page==='home')render()}
+function shutdownRecognition(){
+  clearTimeout(silenceTimer);clearInterval(micClock);silenceTimer=micClock=null;
+  const r=recognition;recognition=null;
+  if(r){
+    r.onstart=r.onspeechstart=r.onresult=r.onerror=r.onend=null;
+    // abort() là lệnh dừng tức thời. stop() được gọi fallback cho WebKit cũ.
+    try{r.abort()}catch{}
+    try{r.stop()}catch{}
+  }
+  state.listening=false;
+  syncListeningVisuals();
+}
+function stopListening(renderHomeAfter=true){
+  shutdownRecognition();lastTranscript='';voiceFinishing=false;
+  if(renderHomeAfter&&state.user&&state.page==='home')render();
+}
 function updateMicClock(){if(!$('#micTimer'))return;const sec=Math.floor((Date.now()-micStart)/1000);$('#micTimer').textContent=`0:${String(sec).padStart(2,'0')}`}
 function finishVoice(text,{manual=false}={}){
-  if(voiceFinishing)return;voiceFinishing=true;const captured=String(text||'').trim();shutdownRecognition();lastTranscript='';
-  if(!captured){voiceFinishing=false;if(state.user&&state.page==='home')render();if(manual)toast('Đã tắt micro.');return}
-  const parsed=parseVoice(captured);voiceFinishing=false;if(!parsed){toast('Tôi chưa đọc được số tiền. Thử “mua cà phê 40k” hoặc “mua xe 10 triệu”.');if(state.page==='home')render();return}chooseWalletForVoice(parsed);
+  if(voiceFinishing)return;
+  voiceFinishing=true;
+  const captured=String(text||'').trim();
+  shutdownRecognition();
+  lastTranscript='';
+  // Cập nhật UI về trạng thái KHÔNG nghe ngay lập tức, trước cả parse/ghi Supabase.
+  if(state.user&&state.page==='home')render();
+  if(!captured){voiceFinishing=false;if(manual)toast('Đã tắt micro.');return}
+  const parsed=parseVoice(captured);
+  voiceFinishing=false;
+  if(!parsed){toast('Tôi chưa đọc được số tiền. Thử “mua cà phê 40k” hoặc “mua xe 10 triệu”.');return}
+  chooseWalletForVoice(parsed);
 }
 function startListening(){
-  if(!requireWalletThen())return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast('Trình duyệt này chưa hỗ trợ nhận giọng nói. Hãy nhập thủ công.');if(state.listening)return;
-  lastTranscript='';voiceFinishing=false;const r=new SR();recognition=r;r.lang='vi-VN';r.continuous=false;r.interimResults=true;state.listening=true;micStart=Date.now();$('#micOverlay').classList.remove('hidden');render();updateMicClock();micClock=setInterval(updateMicClock,250);
+  if(!requireWalletThen())return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return toast('Trình duyệt này chưa hỗ trợ nhận giọng nói. Hãy nhập thủ công.');
+  if(state.listening)return;
+  lastTranscript='';voiceFinishing=false;
+  const r=new SR();recognition=r;r.lang='vi-VN';r.continuous=false;r.interimResults=true;
+  state.listening=true;micStart=Date.now();
+  if($('#micTranscript'))$('#micTranscript').textContent='Đang nghe...';
+  $('#micOverlay')?.classList.remove('hidden');
+  if(state.user&&state.page==='home')render();
+  updateMicClock();micClock=setInterval(updateMicClock,250);
   const arm=()=>{clearTimeout(silenceTimer);silenceTimer=setTimeout(()=>finishVoice(lastTranscript),3000)};
   r.onstart=arm;r.onspeechstart=arm;
-  r.onresult=e=>{let text='';let final=false;for(let i=0;i<e.results.length;i++){text+=e.results[i][0].transcript+' ';if(e.results[i].isFinal)final=true}lastTranscript=text.trim();if($('#micTranscript'))$('#micTranscript').textContent=lastTranscript||'Đang nghe...';arm();if(final)finishVoice(lastTranscript)};
-  r.onerror=e=>{const denied=e.error==='not-allowed'||e.error==='service-not-allowed';shutdownRecognition();voiceFinishing=false;toast(denied?'Bạn chưa cho phép micro. Hãy bật quyền Microphone cho Safari.':'Không nhận được giọng nói. Thử lại nhé.');if(state.page==='home')render()};
+  r.onresult=e=>{
+    let text='',final=false;
+    for(let i=0;i<e.results.length;i++){text+=e.results[i][0].transcript+' ';if(e.results[i].isFinal)final=true}
+    lastTranscript=text.trim();
+    if($('#micTranscript'))$('#micTranscript').textContent=lastTranscript||'Đang nghe...';
+    arm();
+    if(final)finishVoice(lastTranscript);
+  };
+  r.onerror=e=>{
+    const denied=e.error==='not-allowed'||e.error==='service-not-allowed';
+    shutdownRecognition();voiceFinishing=false;
+    if(state.user&&state.page==='home')render();
+    toast(denied?'Bạn chưa cho phép micro. Hãy bật quyền Microphone cho Safari.':'Không nhận được giọng nói. Thử lại nhé.');
+  };
   r.onend=()=>{if(recognition===r&&!voiceFinishing){if(lastTranscript)finishVoice(lastTranscript);else stopListening()}};
   try{r.start()}catch{stopListening();toast('Không thể bật micro lúc này.')}
 }
