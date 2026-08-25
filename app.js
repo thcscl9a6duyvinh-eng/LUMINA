@@ -1,4 +1,4 @@
-const APP_VERSION = '1.5.15';
+const APP_VERSION = '1.5.16';
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const UPDATE_PROGRESS_DURATION_MS = 15000;
 
@@ -329,7 +329,7 @@ function reactionForTransaction(item){
   if(item.kind==='expense'&&Number(item.amount)>=500000)return {mood:'angry',bank:'heavy'};
   return {mood:'sad',bank:'light'};
 }
-function setAssistantReaction(item){const r=reactionForTransaction(item),text=pickAiLine(r.bank);state.assistantReaction={mood:r.mood,text,until:Date.now()+12000};clearTimeout(reactionTimer);reactionTimer=setTimeout(()=>{state.assistantReaction=null;if(state.page==='home')render()},12050);return text}
+function setAssistantReaction(item){const r=reactionForTransaction(item),text=pickAiLine(r.bank);state.assistantReaction={mood:r.mood,text,until:Date.now()+12000};state._assistantText=text;clearTimeout(reactionTimer);reactionTimer=setTimeout(()=>{state.assistantReaction=null;if(state.page==='home')render()},12050);return text}
 function currentAssistant(){if(state.assistantReaction&&state.assistantReaction.until>Date.now())return state.assistantReaction;const mood=robotMood();if(mood==='angry')return {mood,text:pickAiLine('overspend')};if(mood==='sad')return {mood,text:pickAiLine('light')};if(sums().income===0&&sums().expense===0)return {mood:'happy',text:'Xin chào! Hãy thêm giao dịch đầu tiên.'};return {mood:'happy',text:'Tài chính đang được theo dõi. Cứ ghi giao dịch đều nhé.'}}
 function moodText(m){return state.listening?'Đang lắng nghe':m==='angry'?'Đang cảnh báo':m==='sad'?'Đang nhắc nhẹ':'Đang vui'}
 function typeAssistantText(text){const el=$('#assistantTyping');if(!el)return;clearInterval(typingTimer);el.textContent='';const chars=Array.from(String(text||''));let i=0;typingTimer=setInterval(()=>{if(!document.body.contains(el)){clearInterval(typingTimer);return}el.textContent+=chars[i++]||'';if(i>=chars.length)clearInterval(typingTimer)},26)}
@@ -339,8 +339,10 @@ function renderHome(){
   const balance=s.income-s.expense-s.saving;
   const prevBal=prev.income-prev.expense-prev.saving;
   const delta=balance-prevBal;
-  const mood=state.listening?'happy':robotMood();
+  const assistant=currentAssistant();
+  const mood=state.listening?'happy':assistant.mood;
   state.robot=mood;
+  state._assistantText = state.listening ? 'Tôi đang nghe bạn nói...' : assistant.text;
   const recent=[...state.transactions].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at)).slice(0,5);
   const decor=mood==='happy'?luminaIcon('leaf'):mood==='sad'?luminaIcon('rain'):luminaIcon('alert');
   const bubble=state.settings.bubbles!==false?`<div class="assistant-bubble-row mood-${mood}"><div class="speech-bubble bubble-${mood} ${mood==='angry'?'warning':''}"><span id="assistantTyping" class="typing-text"></span><i class="typing-caret"></i></div></div>`:'';
