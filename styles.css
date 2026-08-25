@@ -481,3 +481,162 @@ html,body{background:#06162f}
   .robot-wrap{width:min(224px,62vw) !important; height:190px; margin-left:-6px; transform:translateX(-6px);}
   .speech-bubble{max-width:158px !important; min-height:50px; font-size:9px; padding:8px 10px;}
 }
+
+
+/* v1.5.15 assistant zone rebalance: keep robot prominent but never cover balance info */
+.assistant-zone{
+  position:relative;
+  display:grid !important;
+  grid-template-columns:minmax(0,56%) minmax(126px,44%);
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    'robot bubble'
+    'state bubble';
+  align-items:end;
+  column-gap:8px;
+  row-gap:6px;
+  min-height:220px;
+  padding:10px 0 10px;
+  margin-bottom:8px;
+  overflow:visible;
+}
+.robot-wrap{
+  grid-area:robot;
+  justify-self:start;
+  align-self:end;
+  width:min(208px,54vw) !important;
+  height:176px !important;
+  margin-left:4px !important;
+  transform:none !important;
+  z-index:2;
+}
+.robot-img{
+  position:absolute;
+  bottom:0 !important;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  filter:drop-shadow(0 0 18px rgba(48,210,255,.38));
+}
+.holo{bottom:2px;width:86%;height:18px}
+.assistant-state{
+  grid-area:state;
+  justify-self:center;
+  align-self:start;
+  margin-top:0 !important;
+  z-index:3;
+}
+.assistant-bubble-row{
+  grid-area:bubble;
+  width:100%;
+  align-self:start;
+  justify-content:flex-end;
+  padding:4px 4px 0 0 !important;
+  min-height:0 !important;
+  z-index:4;
+}
+.assistant-zone.mood-happy .assistant-bubble-row{margin-top:6px;}
+.assistant-zone.mood-sad .assistant-bubble-row{margin-top:34px;}
+.assistant-zone.mood-angry .assistant-bubble-row{margin-top:12px;}
+.speech-bubble{
+  position:relative !important;
+  inset:auto !important;
+  transform:none !important;
+  width:100%;
+  max-width:172px !important;
+  min-height:74px !important;
+  padding:12px 14px !important;
+  border-radius:22px !important;
+  border:2px solid rgba(102,180,255,.42) !important;
+  background:linear-gradient(180deg,rgba(33,104,182,.93),rgba(24,77,142,.93)) !important;
+  box-shadow:0 14px 28px rgba(0,0,0,.22), 0 0 0 1px rgba(255,255,255,.03) inset;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.22 !important;
+  overflow:visible;
+}
+.speech-bubble.warning{
+  border-color:rgba(255,130,152,.48) !important;
+  background:linear-gradient(180deg,rgba(198,32,78,.95),rgba(167,28,66,.95)) !important;
+}
+.speech-bubble::before{
+  content:'';
+  position:absolute;
+  left:-18px;
+  bottom:18px;
+  width:0;height:0;
+  border-top:16px solid transparent;
+  border-bottom:12px solid transparent;
+  border-right:20px solid rgba(102,180,255,.42);
+}
+.speech-bubble::after{
+  content:'';
+  position:absolute;
+  left:-14px;
+  bottom:20px;
+  width:0;height:0;
+  border-top:13px solid transparent;
+  border-bottom:10px solid transparent;
+  border-right:17px solid rgba(27,88,157,.96);
+}
+.speech-bubble.warning::before{border-right-color:rgba(255,130,152,.48);}
+.speech-bubble.warning::after{border-right-color:rgba(179,30,72,.96);}
+.speech-bubble .typing-text{
+  display:block;
+  width:100%;
+  min-height:2.6em;
+}
+.speech-bubble .typing-caret{
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  width:2px;
+  height:16px;
+  margin-left:0;
+}
+.weather-mood{
+  left:0 !important;
+  top:28% !important;
+  z-index:3;
+}
+.listen-badge{
+  left:18% !important;
+  top:6% !important;
+  transform:none !important;
+  z-index:5;
+}
+.assistant-fx{
+  left:0;
+  top:10px;
+  width:55%;
+  height:180px;
+  z-index:1;
+}
+/* keep effects tighter around the robot so they do not cover the balance card */
+.assistant-fx.mood-happy i:nth-child(1){left:10%;top:24%;}
+.assistant-fx.mood-happy i:nth-child(2){left:16%;top:56%;}
+.assistant-fx.mood-happy i:nth-child(3){left:48%;top:20%;}
+.assistant-fx.mood-happy i:nth-child(4){left:56%;top:50%;}
+.assistant-fx.mood-sad i:nth-child(1){left:10%;top:22%;}
+.assistant-fx.mood-sad i:nth-child(2){left:24%;top:16%;}
+.assistant-fx.mood-sad i:nth-child(3){left:42%;top:22%;}
+.assistant-fx.mood-sad i:nth-child(4){left:56%;top:15%;}
+.assistant-fx.mood-angry i:nth-child(1){left:10%;top:26%;}
+.assistant-fx.mood-angry i:nth-child(2){left:46%;top:22%;}
+.assistant-fx.mood-angry i:nth-child(3){left:18%;top:52%;}
+.assistant-fx.mood-angry i:nth-child(4){left:54%;top:48%;}
+@media (max-width:430px){
+  .assistant-zone{grid-template-columns:minmax(0,56%) minmax(118px,44%);min-height:212px;}
+  .robot-wrap{width:min(198px,53vw) !important;height:170px !important;}
+  .speech-bubble{max-width:164px !important;min-height:70px !important;padding:11px 12px !important;font-size:10px !important;}
+  .assistant-zone.mood-sad .assistant-bubble-row{margin-top:28px;}
+}
+@media (max-width:390px){
+  .assistant-zone{grid-template-columns:minmax(0,57%) minmax(110px,43%);min-height:202px;column-gap:6px;}
+  .robot-wrap{width:min(188px,52vw) !important;height:162px !important;}
+  .speech-bubble{max-width:152px !important;min-height:66px !important;font-size:9px !important;padding:10px 11px !important;}
+  .weather-mood{top:30% !important;}
+}
