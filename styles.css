@@ -218,7 +218,7 @@ html,body{background:#06162f}
 .weather-mood .nav-svg{width:20px;height:20px}
 .listen-badge,.assistant-state,.speech-bubble{z-index:2}
 
-/* ===== LUMINA v1.5.9 · iPhone bottom fit, neon icons, AI typing ===== */
+/* ===== LUMINA v1.5.11 · iPhone bottom fit, neon icons, AI typing ===== */
 :root{
   --safe-bottom-ui:clamp(0px,env(safe-area-inset-bottom,0px),34px);
   --nav-h:72px;
