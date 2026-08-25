@@ -1,4 +1,4 @@
-const APP_VERSION = '1.5.8';
+const APP_VERSION = '1.5.9';
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const UPDATE_PROGRESS_DURATION_MS = 15000;
 
@@ -739,3 +739,253 @@ function transactionForm(prefill={}){
 async function addVoiceTransaction(item){ try{await dbInsert('transactions',item);showConfirm(item);toast('Đã ghi nhận giao dịch bằng giọng nói');}catch(err){console.warn(err)}finally{stopListening()} }
 function showConfirm(item){ const c=$('#confirmCard'); const icon=item.kind==='income'?'income':item.kind==='saving'?'saving':'expense'; c.innerHTML=`<h3>✅ Đã ghi nhận giao dịch!</h3><div class="confirm-row"><div class="tx-icon ${item.kind}">${luminaIcon(icon)}</div><div><p>${escapeHtml(item.note)}</p><small>${escapeHtml(item.category)}</small></div><strong class="${item.kind==='income'?'positive':'negative'}">${item.kind==='income'?'+':item.kind==='expense'?'-':'↗'} ${fmt(item.amount)}</strong></div>`; c.classList.remove('hidden'); clearTimeout(c._timer); c._timer=setTimeout(()=>c.classList.add('hidden'),2200);}
 function toast(msg){const t=$('#toast');if(!t)return;t.textContent=msg;t.classList.remove('show');void t.offsetWidth;t.classList.add('show');clearTimeout(t._timer);clearTimeout(t._clear);t._timer=setTimeout(()=>t.classList.remove('show'),2600);t._clear=setTimeout(()=>{if(!t.classList.contains('show')) t.textContent='';},3200)}
+
+/* ===== LUMINA v1.5.9 · smart capture, wallet-only accounts, notifications, reactive AI ===== */
+var AI_LINES = {
+  income:[
+    'Đẹp! Tiền vừa vào, hôm nay làm ăn có lực đấy.','Giỏi. Cộng tiền kiểu này mới đúng bài.','Ô kê, ví vừa béo lên rồi. Giữ nhịp này nhé.','Có tiền vào là Lumina vui hẳn. Làm tốt lắm.','Thu nhập tăng rồi. Nay đáng được khen.','Quá ổn. Tiền đang đi đúng chiều.','Đỉnh. Ví vừa được tiếp máu.','Tốt lắm, kiếm tiền có nghề rồi đấy.','Cú cộng tiền này nhìn rất đã mắt.','Giỏi thật. Cứ để số dư xanh thế này đi.','Có thu nhập mới rồi. Lumina chấm điểm cao.','Tài chính vừa sáng lên một nấc.','Chuẩn bài: kiếm trước, tiêu sau.','Hay. Khoản này giúp tháng này dễ thở hơn.','Được đấy. Ví tiền đang cảm ơn bạn.','Làm tốt. Đừng vội tiêu sạch chiến lợi phẩm nhé.','Cộng tiền thành công. Hôm nay có quyền tự hào.','Thu nhập đẹp. Lumina duyệt.','Tốt. Thêm một khoản làm số dư khỏe hơn.','Kiếm tiền thế này thì robot cũng phải nể.','Ví vừa tăng cân. Làm tiếp đi.','Khoản thu này rất có ích. Giỏi nhé.','Tiền vào rồi. Giờ giữ nó ở lại càng lâu càng tốt.','Hôm nay có thành quả. Chúc mừng.','Cộng tiền ngon lành. Tài chính đang lên mood.','Làm ra tiền là kỹ năng, giữ được tiền là đẳng cấp.','Một khoản thu đẹp. Đừng phụ công mình nhé.','Nice. Số dư vừa được cứu viện.','Tốt lắm. Tháng này có thêm khoảng thở.','Tiền vào đúng lúc. Lumina khen thật.'
+  ],
+  light:[
+    'Khoản này chưa lớn, nhưng cộng nhiều lần là thành lớn đấy.','Chi nhẹ thôi. Lumina vẫn đang nhìn đấy nhé.','Ổn, chưa đau ví. Nhưng đừng để lặt vặt thành cả triệu.','Khoản nhỏ, kiểm soát được. Cứ tỉnh táo là ổn.','Một cú chi nhẹ. Không sao, miễn là có chủ đích.','Chưa đáng lo, nhưng nhớ tổng tháng mới là thứ đáng sợ.','Chi được, miễn đừng biến thành thói quen vô thức.','Ví hơi nhói một chút thôi.','Khoản này tạm ổn. Đừng tiện tay mua thêm nhé.','Nhẹ nhàng thôi, số dư còn phải sống đến cuối tháng.','Chi nhỏ nhưng Lumina vẫn ghi sổ đầy đủ.','Ổn. Tự hỏi một câu: có thật sự cần không?','Chưa tới mức báo động. Giữ nhịp thế này là được.','Một khoản hợp lý thì không cần áy náy.','Chi tiêu có kiểm soát là tốt.','Ví vẫn chịu được. Đừng thử sức chịu đựng của nó quá.','Khoản này nhỏ. Quan trọng là đừng lặp 10 lần.','Tạm duyệt. Lumina chưa cau mày đâu.','Không quá tay. Tốt.','Chi nhẹ, nhớ bù lại bằng một khoản tiết kiệm nhé.','Vẫn trong vùng an toàn.','Ổn áp. Nhưng đừng lấy câu “có chút thôi” làm lý do cả ngày.','Khoản nhỏ, cứ ghi đều là bạn sẽ thấy thói quen thật.','Chấp nhận được. Tiếp tục theo dõi nhé.','Không sao. Có kế hoạch là được.','Lumina cho qua khoản này.','Ví chỉ mất một ít máu. Chưa cần cấp cứu.','Tạm ổn. Hãy giữ các khoản sau cũng gọn như vậy.','Chi tiêu nhỏ có ý thức thì không xấu.','Khoản này ổn, miễn là không phá ngân sách ngày.'
+  ],
+  heavy:[
+    'Ông nội ơi, một phát hơn 500 nghìn luôn à? Kiểm tra lại ví đi.','Mày vừa đốt một cục tiền khá to đấy. Có đáng không?','Khoản này nặng ví thật. Đừng bảo Lumina không cảnh báo.','Hơn 500 nghìn một cú. Tiêu kiểu này cuối tháng đừng khóc nhé.','Ác thật, ví vừa ăn nguyên một cú đấm.','Khoản chi to rồi đấy. Dừng tay vài phút trước khi mua tiếp.','Mạnh tay thế? Ít nhất phải chắc rằng món này đáng tiền.','Ví đang nhìn mày với ánh mắt thất vọng đấy.','Một cú chi nặng. Hôm nay bớt mua linh tinh lại.','Trời đất, tiền bay nhanh hơn tốc độ kiếm rồi.','Khoản này đau. Lumina đề nghị khóa tay mua sắm tạm thời.','Chơi lớn quá rồi. Nhìn lại ngân sách tháng ngay.','Tiền không mọc lại trong 5 phút đâu nhé.','Cú này đủ nặng để phải cân lại các khoản còn lại.','Mày tiêu hơn nửa triệu như bấm nút vậy à?','Ví vừa bị hành. Nghỉ mua sắm một nhịp đi.','Khoản này không còn là “tiêu vặt” nữa đâu.','Được rồi đại gia, giờ xem còn bao nhiêu tiền đã.','Một phát khá gắt. Đừng nối combo thêm nữa.','Nếu món này không cần thiết thì cú chi này hơi ngu đấy.','Khoản lớn. Hít một cái rồi xem lại mục tiêu tiết kiệm.','Lumina đang đỏ mắt vì cú chi này đấy.','Nặng tay thật. Tháng này phải bù lại bằng tiết kiệm.','Cú chi to đã ghi nhận. Giờ đừng tự lừa mình là “không đáng bao nhiêu”.','Mày vừa làm biểu đồ chi tiêu nhảy dựng lên.','Khoản này đủ lớn để cần một lý do tử tế.','Đau ví. Rất đau ví.','Chi hơn 500 nghìn rồi. Tạm cai nút mua ngay nhé.','Tài chính vừa ăn damage lớn.','Cú này gắt. Phần còn lại của tháng phải chơi phòng thủ.'
+  ],
+  overspend:[
+    'Âm tiền rồi đấy. Mày tiêu kiểu gì mà thu nhập không đỡ nổi vậy?','Số dư âm. Dừng mua linh tinh ngay, không đùa nữa.','Toang rồi. Chi vượt thu nhập thật rồi đấy.','Mày vừa đưa ví xuống dưới số 0. Làm ơn tỉnh lại.','Âm tiền mà còn định tiêu tiếp thì Lumina chịu thua.','Báo động đỏ: kiếm ít hơn tiêu. Sửa ngay.','Ví âm rồi. Đây không còn là lúc “thích thì mua” nữa.','Chi quá tay rồi đấy. Cắt các khoản không cần thiết ngay.','Số dư đang âm. Mày đang tiêu tiền của tương lai đấy.','Đừng tự an ủi nữa: tháng này đang vượt thu nhập.','Âm là âm. Nghỉ mua sắm và lên kế hoạch bù lại đi.','Lumina giận thật. Tiền ra nhiều hơn tiền vào rồi.','Ví đã thủng. Việc đầu tiên: dừng chi không thiết yếu.','Mày vừa vượt giới hạn. Từ giờ ưu tiên sống sót tài chính.','Âm tiền rồi mà còn “một món nữa” là dở đấy.','Đây là cảnh báo thật: dòng tiền đang sai hướng.','Tiêu đến âm thì phải phanh, không phải tăng ga.','Số dư đỏ chót rồi. Nhìn thẳng vào nó đi.','Tháng này đang bị chi tiêu đè đầu. Cắt ngay một nhóm chi.','Lumina không vui: tài chính đã xuống dưới 0.','Mày đang vay tương lai để trả cho hiện tại đấy.','Dừng combo tiêu tiền. Ví hết chịu nổi rồi.','Âm tiền là tín hiệu phải đổi hành vi ngay.','Không ổn. Thu chưa đủ mà chi đã vượt.','Cảnh báo nặng: nếu tiếp tục, mục tiêu tiết kiệm coi như bay.','Số dư âm. Mọi khoản mua sắm không cần thiết tạm cấm.','Thật sự quá tay rồi. Phải kéo số dư về dương trước.','Ví đang cấp cứu. Đừng tạo thêm giao dịch chi nữa.','Mày vừa tiêu vượt khả năng tháng này. Chấn chỉnh ngay.','Đỏ rồi. Hôm nay ngừng tiêu, mai tính tiếp.'
+  ]
+};
+var lastAiLine='';
+var typingTimer=null;
+var reactionTimer=null;
+var voiceFinalized=false;
+var pendingVoiceTransaction=null;
+var resumeTransactionAfterWallet=false;
+
+function stripVN(v=''){
+  return String(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9.,\s+-]/g,' ').replace(/\s+/g,' ').trim();
+}
+function pickAiLine(bank){
+  const arr=AI_LINES[bank]||AI_LINES.light; let line=arr[Math.floor(Math.random()*arr.length)];
+  if(arr.length>1 && line===lastAiLine) line=arr[(arr.indexOf(line)+1+Math.floor(Math.random()*(arr.length-1)))%arr.length];
+  lastAiLine=line; return line;
+}
+function financialBalance(){const s=sums();return s.income-s.expense-s.saving}
+function reactionForTransaction(item){
+  const balance=financialBalance();
+  if(balance<0) return {mood:'angry',bank:'overspend'};
+  if(item.kind==='income') return {mood:'happy',bank:'income'};
+  if(item.kind==='expense' && Number(item.amount)>=500000) return {mood:'angry',bank:'heavy'};
+  if(item.kind==='expense') return {mood:'sad',bank:'light'};
+  return {mood:'happy',bank:'income'};
+}
+function setAssistantReaction(item){
+  const r=reactionForTransaction(item); const text=pickAiLine(r.bank);
+  state.assistantReaction={mood:r.mood,text,until:Date.now()+12000};
+  clearTimeout(reactionTimer); reactionTimer=setTimeout(()=>{state.assistantReaction=null;if(state.page==='home')render()},12050);
+  return text;
+}
+function currentAssistant(){
+  if(state.assistantReaction && state.assistantReaction.until>Date.now()) return state.assistantReaction;
+  const mood=robotMood();
+  if(mood==='angry') return {mood,text:pickAiLine('overspend')};
+  if(mood==='sad') return {mood,text:pickAiLine('light')};
+  if(sums().income===0&&sums().expense===0) return {mood:'happy',text:'Xin chào! Hãy thêm giao dịch đầu tiên.'};
+  return {mood:'happy',text:pickAiLine('income')};
+}
+function typeAssistantText(text){
+  const el=$('#assistantTyping'); if(!el)return; clearInterval(typingTimer); el.textContent='';
+  const chars=Array.from(String(text||'')); let i=0;
+  typingTimer=setInterval(()=>{ if(!document.body.contains(el)){clearInterval(typingTimer);return} el.textContent+=chars[i]||''; i++; if(i>=chars.length)clearInterval(typingTimer); },26);
+}
+function moodText(m){ return state.listening?'Đang lắng nghe':m==='angry'?'Đang cảnh báo':m==='sad'?'Đang nhắc nhẹ':'Đang vui'; }
+function renderHome(){
+  const s=sums(), prev=previousMonthSums(); const balance=s.income-s.expense-s.saving; const prevBal=prev.income-prev.expense-prev.saving; const delta=balance-prevBal;
+  const a=currentAssistant(); const mood=state.listening?'happy':a.mood; state.robot=mood; state._assistantText=a.text;
+  const recent=[...state.transactions].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at)).slice(0,5);
+  const moodDecor=mood==='happy'?luminaIcon('leaf'):mood==='sad'?luminaIcon('rain'):luminaIcon('alert');
+  return `<div class="assistant-zone"><div class="weather-mood">${moodDecor}</div>${state.listening?'<div class="listen-badge">🎙 Tôi đang nghe bạn...</div>':''}<div class="robot-wrap" id="robotWrap"><div class="holo"></div><img id="robotImg" class="robot-img robot-${mood} ${state.listening?'listening':''}" alt="Lumina assistant"></div>${state.settings.bubbles!==false?`<div class="speech-bubble ${mood==='angry'?'warning':''}"><span id="assistantTyping" class="typing-text"></span><i class="typing-caret"></i></div>`:''}<div class="assistant-state ${mood}">${moodText(mood)}</div></div><div class="balance-card"><div><div class="card-label">Số dư hiện tại ${luminaIcon('eye')}</div><div class="amount-main ${balance<0?'negative':''}">${fmt(balance)}</div></div><div class="trend ${delta<0?'negative':''}"><strong>${delta>=0?'↑':'↓'} ${fmt(Math.abs(delta))}</strong>so với tháng trước</div></div><div class="stat-grid"><div class="mini-card income"><div class="ico">${luminaIcon('income')}</div><small>Thu nhập</small><strong>${fmt(s.income)}</strong></div><div class="mini-card expense"><div class="ico">${luminaIcon('expense')}</div><small>Chi tiêu</small><strong>${fmt(s.expense)}</strong></div><div class="mini-card saving"><div class="ico">${luminaIcon('saving')}</div><small>${balance<0?'Vượt mức':'Tiết kiệm'}</small><strong>${fmt(balance<0?Math.abs(balance):s.saving)}</strong></div></div><div class="transaction-wrap"><div class="section-title"><h3>Giao dịch gần đây</h3><button class="text-action" data-go="transactions">Xem tất cả</button></div><div class="transaction-panel"><div class="tx-list">${recent.length?recent.map(txHtml).join(''):'<div class="empty">Chưa có giao dịch.<br>Nhấn micro hoặc thêm thủ công.</div>'}</div></div></div>`;
+}
+
+function learnedCategory(note,kind='expense'){
+  const q=stripVN(note); if(!q||q.length<3)return null;
+  const qTokens=new Set(q.split(/\s+/).filter(x=>x.length>=3&&!['mua','tien','dong','cho'].includes(x)));
+  let best=null,bestScore=0;
+  for(const tx of (state.transactions||[])){
+    if(tx.kind!==kind||!tx.category||!tx.note)continue;
+    const n=stripVN(tx.note); let score=0;
+    if(n===q)score=100; else if(n.includes(q)||q.includes(n))score=70; else{
+      const tokens=n.split(/\s+/).filter(x=>x.length>=3); const common=tokens.filter(x=>qTokens.has(x)).length; score=common*22;
+    }
+    if(score>bestScore){bestScore=score;best=tx.category}
+  }
+  return bestScore>=44?best:null;
+}
+function smartCategory(note,kind='expense'){
+  const t=stripVN(note); const learned=learnedCategory(note,kind); if(learned)return learned;
+  if(kind==='saving') return 'Tiết kiệm';
+  if(kind==='income'){
+    if(/luong|salary|tien cong/.test(t))return 'Lương';
+    if(/thuong|bonus|hoa hong/.test(t))return 'Thưởng';
+    if(/freelance|lam them|job|du an/.test(t))return 'Thu nhập thêm';
+    if(/ban hang|doanh thu|kinh doanh/.test(t))return 'Kinh doanh';
+    if(/lai|co tuc|interest/.test(t))return 'Đầu tư';
+    if(/hoan tien|refund/.test(t))return 'Hoàn tiền';
+    if(/qua|duoc cho|duoc tang/.test(t))return 'Quà tặng';
+    return 'Thu nhập khác';
+  }
+  const rules=[
+    ['Xe cộ',/\b(mua xe|xe|oto|o to|xe may|sua xe|bao duong|lop xe|ac quy|nhot xe)\b/],
+    ['Ăn uống',/\b(ca phe|coffee|tra sua|an sang|an trua|an toi|com|pho|bun|banh mi|nha hang|quan an|nhau|bia|do an)\b/],
+    ['Đi chợ & Thực phẩm',/di cho|sieu thi|bach hoa xanh|winmart|coopmart|thuc pham|rau|thit|ca |trung|sua |gao/],
+    ['Di chuyển',/grab|taxi|be |xanh sm|xe buyt|bus|xang|dau xe|gui xe|cau duong|ve tau|ve xe/],
+    ['Nhà ở',/tien nha|thue nha|chung cu|noi that|sua nha|son nha|do gia dung/],
+    ['Hóa đơn',/tien dien|tien nuoc|internet|wifi|dien thoai|gas|hoa don|cap quang/],
+    ['Sức khỏe',/benh vien|kham|thuoc|nha khoa|bac si|xet nghiem|gym|the hinh|vitamin/],
+    ['Giáo dục',/hoc phi|khoa hoc|truong hoc|sach|giao trinh|hoc them|chung chi/],
+    ['Du lịch',/du lich|khach san|hotel|resort|tour|booking|airbnb|ve may bay/],
+    ['Giải trí',/netflix|spotify|youtube premium|game|phim|rap phim|karaoke|concert|ve xem/],
+    ['Công nghệ',/iphone|ipad|macbook|laptop|may tinh|camera|may anh|tai nghe|chuot|ban phim|dien thoai/],
+    ['Làm đẹp',/spa|salon|cat toc|my pham|skincare|makeup|nail/],
+    ['Gia đình & Trẻ em',/bim|sua bot|do choi|em be|con |tre em|gia dinh/],
+    ['Thú cưng',/cho |meo|thu cung|pet|thuc an cho|thuc an meo|bac si thu y/],
+    ['Bảo hiểm & Thuế',/bao hiem|thue |phi bao hiem|bhxh|bhyt/],
+    ['Quà tặng & Từ thiện',/qua tang|sinh nhat|mung cuoi|tu thien|ung ho|donate/],
+    ['Công việc',/van phong|in an|khach hang|cong tac|phuc vu cong viec/],
+    ['Mua sắm',/shopee|lazada|tiki|mua |quan ao|ao |quan |giay|tui|phu kien/]
+  ];
+  return (rules.find(([,re])=>re.test(t))||['Khác'])[0];
+}
+function parseUnder1000(words){
+  const n={khong:0,mot:1,hai:2,ba:3,bon:4,tu:4,nam:5,lam:5,sau:6,bay:7,tam:8,chin:9}; let total=0,cur=0;
+  for(let i=0;i<words.length;i++){const w=words[i];if(w==='tram'){total+=(cur||1)*100;cur=0}else if(w==='muoi'){total+=(cur||1)*10;cur=0}else if(w in n){cur=n[w]} }
+  return total+cur;
+}
+function parseSpelledAmount(t){
+  const numWords='(?:khong|mot|hai|ba|bon|tu|nam|lam|sau|bay|tam|chin|muoi|tram|linh|le)'; let total=0,found=false;
+  const re=new RegExp(`((?:${numWords}\\s*)+)\\s*(ty|trieu|nghin|ngan)`,'g'); let m;
+  while((m=re.exec(t))){const val=parseUnder1000(m[1].trim().split(/\s+/));const mult=m[2]==='ty'?1e9:m[2]==='trieu'?1e6:1e3;total+=val*mult;found=true}
+  return found?total:null;
+}
+function parseAmount(text){
+  const t=stripVN(text).replace(/,/g,'.'); let m;
+  m=t.match(/(\d+)\s*tr\s*(\d{1,3})(?!\d)/); if(m){const frac=Number(m[2])/Math.pow(10,m[2].length);return Math.round((Number(m[1])+frac)*1e6)}
+  m=t.match(/(\d+(?:\.\d+)?)\s*(ty|ti)\b/); if(m)return Math.round(Number(m[1])*1e9);
+  m=t.match(/(\d+(?:\.\d+)?)\s*(trieu|tr)\b/); if(m)return Math.round(Number(m[1])*1e6);
+  m=t.match(/(\d+(?:\.\d+)?)\s*(nghin|ngan|k)\b/); if(m)return Math.round(Number(m[1])*1e3);
+  m=t.match(/\b\d{1,3}(?:[.\s]\d{3})+\b/); if(m)return Number(m[0].replace(/[.\s]/g,''));
+  m=t.match(/\b\d{4,}\b/); if(m)return Number(m[0]);
+  return parseSpelledAmount(t);
+}
+function parseVoice(raw){
+  const t=stripVN(raw); const amount=parseAmount(raw); if(!amount||amount<=0)return null;
+  let kind='expense';
+  if(/tiet kiem|de danh|bo heo|gui tiet kiem/.test(t))kind='saving';
+  else if(/(^| )(thu|nhan|luong|thuong|duoc chuyen|duoc tra|ban duoc|doanh thu|hoan tien)( |$)/.test(t))kind='income';
+  else if(/mua|chi|tra|thanh toan|an |uong|dong tien|nap tien|dat /.test(t))kind='expense';
+  let note=String(raw).replace(/\d+(?:[.,]\d+)?\s*(tỷ|ty|tỉ|ti|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)?/ig,' ').replace(/\s+/g,' ').trim();
+  note=note.replace(/^\s*(thu|chi|nhận|nhan|trả|tra|thanh toán|thanh toan)\s+/i,'').trim()|| (kind==='income'?'Thu nhập':kind==='saving'?'Tiết kiệm':'Chi tiêu');
+  return {kind,amount,category:smartCategory(note,kind),note,occurred_at:nowIso(),raw_voice:raw};
+}
+
+function requireWalletThen(action='manual'){
+  if((state.wallets||[]).length)return true;
+  if(action==='manual')resumeTransactionAfterWallet=true;
+  toast('Bạn cần tạo ít nhất 1 Ví & Tài sản trước khi ghi giao dịch.'); navigate('wallets'); setTimeout(()=>openWalletForm(true),120); return false;
+}
+function walletOptions(selected=''){return (state.wallets||[]).map(w=>`<option value="${w.id}" ${selected===w.id?'selected':''}>${escapeHtml(w.name)} · ${fmt(w.balance)}</option>`).join('')}
+function openWalletForm(required=false){
+  openSheet(required?'Tạo ví để tiếp tục':'Thêm ví / tài sản',`<form id="walletCreateForm">${required?'<div class="wallet-required">Giao dịch phải gắn với một Ví & Tài sản. Hãy tạo ít nhất một ví trước.</div>':''}<div class="form-grid"><label class="full">Tên ví / tài khoản<input name="name" required placeholder="Ví tiền mặt / Vietcombank"></label><label>Loại<select name="type"><option>Tiền mặt</option><option>Ngân hàng</option><option>Ví điện tử</option><option>Tài sản khác</option></select></label><label>Số dư ban đầu<input name="balance" type="number" value="0"></label></div><div class="sheet-actions"><button type="button" class="secondary" onclick="document.querySelector('#closeSheet').click()">Hủy</button><button class="primary" type="submit">Tạo ví</button></div></form>`,async e=>{e.preventDefault();try{const fd=new FormData(e.target);const w=await dbInsert('wallets',{name:fd.get('name'),type:fd.get('type')||'Ví',balance:+fd.get('balance'),icon:'💳'});closeSheet();toast('Đã tạo Ví & Tài sản');if(pendingVoiceTransaction){const item=pendingVoiceTransaction;pendingVoiceTransaction=null;await recordTransaction(item,w.id);navigate('home')}else if(resumeTransactionAfterWallet){resumeTransactionAfterWallet=false;navigate('transactions');setTimeout(()=>transactionForm(),100)}}catch(err){console.warn(err)}});
+}
+function transactionForm(prefill={}){
+  if(!requireWalletThen('manual'))return;
+  const dt=prefill.occurred_at?new Date(prefill.occurred_at):new Date(); const local=new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16); const defaultWallet=prefill.wallet_id||state.wallets[0]?.id||'';
+  openSheet('Thêm giao dịch',`<form id="txForm"><div class="form-grid"><div class="full"><div class="segmented" id="kindSeg"><button type="button" data-kind="income" class="${prefill.kind==='income'?'active':''}">Thu nhập</button><button type="button" data-kind="expense" class="${!prefill.kind||prefill.kind==='expense'?'active':''}">Chi tiêu</button><button type="button" data-kind="saving" class="${prefill.kind==='saving'?'active':''}">Tiết kiệm</button></div><input type="hidden" name="kind" value="${prefill.kind||'expense'}"></div><label>Số tiền<input name="amount" type="number" inputmode="numeric" min="1" required value="${prefill.amount||''}"></label><label>Tài khoản<select name="wallet_id" required>${walletOptions(defaultWallet)}</select></label><label class="full">Nội dung<input id="txNoteInput" name="note" required placeholder="Ví dụ: cà phê, tiền điện, mua xe..." value="${escapeAttr(prefill.note||'')}"></label><div class="category-auto"><div><small>Danh mục tự động</small><strong id="autoCategoryPreview">${smartCategory(prefill.note||'',prefill.kind||'expense')}</strong></div>${luminaIcon('sync')}</div><label class="full">Thời gian<input name="occurred_at" type="datetime-local" value="${local}"></label></div><div class="sheet-actions"><button type="button" class="secondary" onclick="document.querySelector('#closeSheet').click()">Hủy</button><button class="primary" type="submit">Ghi nhận</button></div></form>`,async e=>{e.preventDefault();const fd=new FormData(e.target);const kind=fd.get('kind');const note=fd.get('note');const item={kind,amount:+fd.get('amount'),category:smartCategory(note,kind),note,occurred_at:fd.get('occurred_at')?new Date(fd.get('occurred_at')).toISOString():nowIso()};try{await recordTransaction(item,fd.get('wallet_id'));closeSheet();showConfirm(item)}catch(err){console.warn(err)}});
+  const refreshCat=()=>{$('#autoCategoryPreview').textContent=smartCategory($('#txNoteInput').value,$('#txForm [name=kind]').value)}; $('#txNoteInput').addEventListener('input',refreshCat);
+  $$('#kindSeg button').forEach(b=>b.onclick=()=>{$$('#kindSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txForm [name=kind]').value=b.dataset.kind;refreshCat()});
+}
+async function recordTransaction(item,walletId){
+  const wallet=(state.wallets||[]).find(w=>w.id===walletId); if(!wallet)throw new Error('Hãy chọn một Ví & Tài sản hợp lệ.');
+  item={...item,category:smartCategory(item.note,item.kind),wallet_id:wallet.id,account:wallet.name};
+  let saved;
+  if(state.demo){saved=await dbInsert('transactions',item);const delta=item.kind==='income'?Number(item.amount):-Number(item.amount);await dbUpdate('wallets',wallet.id,{balance:Number(wallet.balance||0)+delta});}
+  else{
+    const {data,error}=await sb.rpc('record_transaction',{p_kind:item.kind,p_amount:Number(item.amount),p_category:item.category,p_note:item.note,p_wallet_id:wallet.id,p_occurred_at:item.occurred_at||nowIso()});
+    if(error){const m=dbFriendlyError(error);toast(m);throw new Error(m)} saved=Array.isArray(data)?data[0]:data; await refreshAll();
+  }
+  const line=setAssistantReaction(item); await createNotification(item.kind==='income'?'Có tiền vào':'Giao dịch mới',`${item.note}: ${item.kind==='income'?'+':'-'}${fmt(item.amount)} · ${item.category}. ${line}`,item.kind==='income'?'income':'transaction');
+  if(state.page!=='home')navigate('home'); else render();
+  return saved||item;
+}
+async function deleteTransaction(id){
+  const tx=(state.transactions||[]).find(x=>x.id===id); if(!tx)return;
+  if(state.demo){await dbDelete('transactions',id);if(tx.wallet_id){const w=state.wallets.find(x=>x.id===tx.wallet_id);if(w){const delta=tx.kind==='income'?-Number(tx.amount):Number(tx.amount);await dbUpdate('wallets',w.id,{balance:Number(w.balance||0)+delta})}}return}
+  const {error}=await sb.rpc('delete_transaction',{p_transaction_id:id}); if(error){const m=dbFriendlyError(error);toast(m);throw new Error(m)} await refreshAll();
+}
+function chooseWalletForVoice(item){
+  if(!requireWalletThen('voice')){pendingVoiceTransaction=item;return}
+  if(state.wallets.length===1)return recordTransaction(item,state.wallets[0].id).then(()=>showConfirm(item));
+  openSheet('Chọn tài khoản',`<div class="wallet-choice-list">${state.wallets.map(w=>`<button class="wallet-choice" data-wallet-choice="${w.id}"><span class="entity-icon">${luminaIcon('wallet')}</span><span><strong>${escapeHtml(w.name)}</strong><small>${escapeHtml(w.type||'Ví')}</small></span><em>${fmt(w.balance)}</em></button>`).join('')}</div>`); $$('#sheetBody [data-wallet-choice]').forEach(b=>b.onclick=async()=>{const id=b.dataset.walletChoice;closeSheet();try{await recordTransaction(item,id);showConfirm(item)}catch(e){console.warn(e)}});
+}
+async function addVoiceTransaction(item){ stopListening('final'); return chooseWalletForVoice(item); }
+
+function shutdownRecognitionHardware(){
+  clearTimeout(silenceTimer);clearInterval(micClock);silenceTimer=micClock=null;
+  const r=recognition; recognition=null;
+  if(r){try{r.onstart=r.onspeechstart=r.onresult=r.onerror=r.onend=null;r.abort()}catch(e){try{r.stop()}catch{}}}
+  if(window.__luminaMicStream){try{window.__luminaMicStream.getTracks().forEach(t=>t.stop())}catch{} window.__luminaMicStream=null}
+}
+function stopListening(reason='manual'){
+  shutdownRecognitionHardware();state.listening=false;voiceFinalized=false;$('#micOverlay')?.classList.add('hidden');if(state.user&&state.page==='home')render();
+}
+function startListening(){
+  if(!requireWalletThen('voice'))return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return toast('Trình duyệt này chưa hỗ trợ nhận giọng nói. Hãy nhập giao dịch thủ công.'); if(state.listening)return;
+  voiceFinalized=false; const r=new SR(); recognition=r;r.lang='vi-VN';r.continuous=false;r.interimResults=true;state.listening=true;micStart=Date.now();$('#micOverlay').classList.remove('hidden');render();updateMicClock();micClock=setInterval(updateMicClock,250);
+  const arm=()=>{clearTimeout(silenceTimer);silenceTimer=setTimeout(()=>{if(!voiceFinalized)stopListening('silence')},3000)};
+  r.onstart=arm;r.onspeechstart=arm;r.onresult=e=>{arm();let text='';let final=false;for(let i=e.resultIndex;i<e.results.length;i++){text+=e.results[i][0].transcript;final=final||e.results[i].isFinal}$('#micTranscript').textContent=text;if(final&&!voiceFinalized){voiceFinalized=true;shutdownRecognitionHardware();state.listening=false;$('#micOverlay').classList.add('hidden');const parsed=parseVoice(text);if(parsed)addVoiceTransaction(parsed);else{toast('Tôi chưa đọc được số tiền. Thử: “mua cà phê 40k” hoặc “mua xe 10 triệu”.');if(state.page==='home')render()}}};
+  r.onerror=e=>{const denied=e.error==='not-allowed'||e.error==='service-not-allowed';stopListening('error');toast(denied?'Bạn chưa cho phép micro. Hãy bật quyền Microphone cho Safari.':'Không nhận được giọng nói. Thử lại nhé.')};r.onend=()=>{if(!voiceFinalized&&state.listening)stopListening('end')};try{r.start()}catch{stopListening('error')}
+}
+
+async function refreshAll(){
+  if(state.demo){state.notifications=state.notifications||[];updateNotifDot();return}
+  const tables=['transactions','goals','wallets','loans','subscriptions','bank_accounts','notifications'];
+  const req=tables.map(t=>sb.from(t).select('*').eq('user_id',uid()).order(t==='transactions'?'occurred_at':'created_at',{ascending:false}).then(r=>({t,...r}))); const results=await Promise.all(req); results.forEach(r=>{if(!r.error)state[r.t]=r.data||[]}); const p=await sb.from('profiles').select('*').eq('id',uid()).maybeSingle();if(!p.error)state.profile=p.data;updateNotifDot();if(!$('#appShell').classList.contains('hidden'))render();
+}
+function subscribeRealtime(){
+  if(!configured||state.demo||!state.user)return;if(state.realtime)sb.removeChannel(state.realtime);let ch=sb.channel(`lumina-${uid()}`);['transactions','goals','wallets','loans','subscriptions','bank_accounts','notifications'].forEach(table=>{ch=ch.on('postgres_changes',{event:'*',schema:'public',table,filter:`user_id=eq.${uid()}`},()=>refreshAll())});state.realtime=ch.subscribe();
+}
+async function createNotification(title,body,type='info'){
+  const n={id:crypto.randomUUID(),user_id:uid(),title,body,type,created_at:nowIso(),read_at:null};
+  if(state.demo){state.notifications=state.notifications||[];state.notifications.unshift(n);updateNotifDot();return}
+  try{await sb.from('notifications').insert({user_id:uid(),title,body,type});await refreshAll()}catch(e){console.warn('notification',e)}
+}
+function unreadNotifications(){return (state.notifications||[]).filter(n=>!n.read_at)}
+function updateNotifDot(){const dot=$('#notifDot');if(dot)dot.classList.toggle('hidden',!(pendingUpdateVersion||unreadNotifications().length))}
+function setPendingUpdate(version){pendingUpdateVersion=version;updateNotifDot()}
+function openNotificationsCenter(){
+  const list=state.notifications||[]; const updateRow=pendingUpdateVersion?`<div class="notification-item unread"><span>${luminaIcon('sync')}</span><div><h4>Phiên bản v${pendingUpdateVersion} đã sẵn sàng</h4><p>Chỉ cập nhật khi bạn đồng ý.</p><button id="openUpdateFromNotif" class="mini-action">Xem cập nhật</button></div></div>`:'';
+  const rows=list.slice(0,30).map(n=>`<div class="notification-item ${n.read_at?'':'unread'}"><span>${luminaIcon(n.type==='income'?'income':'bell')}</span><div><h4>${escapeHtml(n.title)}</h4><p>${escapeHtml(n.body)}</p><time>${new Date(n.created_at).toLocaleString('vi-VN')}</time></div></div>`).join('');
+  openSheet('Thông báo',`${updateRow}<div class="notification-list">${rows||'<div class="empty">Chưa có thông báo.</div>'}</div>${unreadNotifications().length?'<div class="notification-actions"><button id="markAllRead" class="secondary">Đánh dấu đã đọc</button></div>':''}`);
+  $('#openUpdateFromNotif')?.addEventListener('click',()=>{closeSheet();showUpdatePrompt(pendingUpdateVersion)});$('#markAllRead')?.addEventListener('click',markAllNotificationsRead);
+}
+async function markAllNotificationsRead(){
+  const now=nowIso();if(state.demo){(state.notifications||[]).forEach(n=>n.read_at=now);updateNotifDot();closeSheet();return}
+  const {error}=await sb.from('notifications').update({read_at:now}).eq('user_id',uid()).is('read_at',null);if(error)return toast(dbFriendlyError(error));await refreshAll();closeSheet();toast('Đã đọc tất cả thông báo');
+}
+
+function openAddSheet(kind){
+  if(kind==='transaction')return transactionForm(); if(kind==='wallet')return openWalletForm(false);
+  if(kind==='goal')return genericForm('Thêm mục tiêu',`<label class="full">Tên mục tiêu<input name="title" required placeholder="Du lịch Đà Lạt"></label><label>Số tiền mục tiêu<input name="target" type="number" required min="1"></label><label>Đã có<input name="saved" type="number" value="0" min="0"></label><label class="full">Ngày dự kiến<input name="due_date" type="date"></label>`,async fd=>dbInsert('goals',{title:fd.get('title'),target:+fd.get('target'),saved:+fd.get('saved'),due_date:fd.get('due_date')||null,icon:'🎯'}));
+  if(kind==='loan')return genericForm('Thêm khoản vay',`<label class="full">Tên khoản vay<input name="name" required></label><label>Giá trị vay<input name="principal" type="number" required></label><label>Còn lại<input name="remaining" type="number" required></label><label class="full">Hạn thanh toán<input name="due_date" type="date"></label>`,async fd=>dbInsert('loans',{name:fd.get('name'),principal:+fd.get('principal'),remaining:+fd.get('remaining'),due_date:fd.get('due_date')||null}));
+  if(kind==='subscription')return genericForm('Thêm subscription',`<label class="full">Dịch vụ<input name="name" required placeholder="iCloud+"></label><label>Số tiền<input name="amount" type="number" required></label><label>Chu kỳ<select name="billing_cycle"><option value="monthly">Hàng tháng</option><option value="yearly">Hàng năm</option></select></label><label class="full">Kỳ thu tiếp theo<input name="next_charge" type="date"></label>`,async fd=>dbInsert('subscriptions',{name:fd.get('name'),amount:+fd.get('amount'),billing_cycle:fd.get('billing_cycle'),next_charge:fd.get('next_charge')||null}));
+  if(kind==='bank')return genericForm('Thêm ngân hàng',`<label class="full">Ngân hàng<input name="bank_name" required placeholder="Vietcombank"></label><label class="full">Tên tài khoản<input name="account_label" placeholder="Tài khoản chính"></label><label class="full">4 số cuối<input name="last4" maxlength="4" inputmode="numeric"></label>`,async fd=>dbInsert('bank_accounts',{bank_name:fd.get('bank_name'),account_label:fd.get('account_label'),last4:fd.get('last4'),enabled:true}));
+}
+function bindPage(){
+  $$('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));$$('[data-add]').forEach(b=>b.onclick=()=>openAddSheet(b.dataset.add));$$('[data-del]').forEach(b=>b.onclick=async()=>{const [table,id]=b.dataset.del.split(':');if(confirm('Xóa mục này?')){try{table==='transactions'?await deleteTransaction(id):await dbDelete(table,id)}catch(e){console.warn(e)}}});$$('[data-goal-add]').forEach(b=>b.onclick=()=>openGoalDeposit(b.dataset.goalAdd));$$('[data-toggle]').forEach(b=>b.onclick=()=>{const k=b.dataset.toggle;state.settings[k]=!state.settings[k];render()});$$('[data-check-update]').forEach(b=>b.onclick=async()=>{const v=await checkForNewVersion({silent:false});if(!v)toast(`LUMINA v${APP_VERSION} đang là phiên bản mới nhất.`)});const rw=$('#robotWrap');if(rw)rw.onclick=()=>{if(!state.listening)startListening()};if(state.page==='home'&&state._assistantText)setTimeout(()=>typeAssistantText(state._assistantText),20);updateNotifDot();
+}
+function dbFriendlyError(error){
+  const raw=String(error?.message||error||'').trim(),msg=raw.toLowerCase();if(msg.includes('permission denied')||msg.includes('row-level security'))return 'Thiếu quyền dữ liệu. Hãy chạy lại supabase.sql v1.5.9 rồi đăng xuất/đăng nhập lại.';if(msg.includes('wallet_required')||msg.includes('vi_tai_san'))return 'Hãy tạo và chọn một Ví & Tài sản trước.';if(msg.includes('jwt')||msg.includes('auth'))return 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.';return raw||'Có lỗi dữ liệu xảy ra.';
+}
+
+setTimeout(()=>{const n=$('#notifyBtn');if(n)n.onclick=openNotificationsCenter;updateNotifDot()},0);
