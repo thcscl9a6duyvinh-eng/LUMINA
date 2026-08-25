@@ -1,7 +1,6 @@
--- LUMINA Money v1.5.6 - schema unchanged from v1.5.5; Google Auth + per-user RLS.
--- LUMINA Money v1.5.5 - Supabase schema
+-- LUMINA Money v1.5.7 - Email/Password Auth + per-user RLS.
 -- Chạy toàn bộ file này trong Supabase SQL Editor của CHÍNH dự án Supabase chủ app.
--- Người dùng cuối đăng nhập bằng Google/Gmail qua Supabase Auth; họ KHÔNG cần tài khoản Supabase.
+-- Người dùng cuối đăng ký/đăng nhập bằng email + mật khẩu qua Supabase Auth; họ KHÔNG cần tài khoản quản trị Supabase.
 -- Tất cả người dùng dùng chung database, nhưng RLS khóa từng hàng theo auth.uid().
 
 create extension if not exists pgcrypto;
@@ -149,9 +148,9 @@ begin
 end $$;
 
 
--- GOOGLE LOGIN SETUP (thực hiện trong Dashboard, không phải SQL):
--- 1) Authentication > Providers > Google > Enable.
--- 2) Điền Google Client ID + Client Secret từ Google Cloud Console.
--- 3) Google Cloud OAuth redirect URI phải trỏ về: https://<PROJECT_REF>.supabase.co/auth/v1/callback
--- 4) Authentication > URL Configuration: Site URL = domain Vercel; thêm localhost nếu cần test.
+-- EMAIL LOGIN SETUP (thực hiện trong Dashboard, không phải SQL):
+-- 1) Authentication > Providers > Email: bật Email provider.
+-- 2) Nên bật Confirm email để tài khoản phải xác nhận email trước khi đăng nhập.
+-- 3) Authentication > URL Configuration: Site URL = domain Vercel; thêm domain Vercel vào Redirect URLs.
+-- 4) Không cần bật Google Provider, không cần Google Cloud, Client ID hay Client Secret.
 -- 5) Frontend chỉ dùng Project URL + anon/publishable key. Tuyệt đối không đưa service_role key lên GitHub/Vercel frontend.

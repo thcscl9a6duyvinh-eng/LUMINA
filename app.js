@@ -1,8 +1,8 @@
-const APP_VERSION = '1.5.6';
+const APP_VERSION = '1.5.7';
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const UPDATE_PROGRESS_DURATION_MS = 15000;
 
-// Update Gate: từ v1.5.6 trở đi, Vercel có deploy mới cũng KHÔNG tự thay giao diện đang dùng.
+// Update Gate: Vercel có deploy mới cũng KHÔNG tự thay giao diện đang dùng.
 // App chỉ chuyển sang release mới sau khi người dùng bấm "Đồng ý cập nhật".
 let pendingUpdateVersion = null;
 let updateCheckTimer = null;
@@ -85,10 +85,16 @@ function demoSave(){
 async function init(){
   const urlParams=new URLSearchParams(window.location.search);
   const authError=urlParams.get('error_description')||urlParams.get('error');
-  if(authError) setTimeout(()=>toast(decodeURIComponent(authError)),200);
-  $('#configHint').textContent = configured
-    ? 'Backend Supabase đã sẵn sàng. Đăng nhập bằng Google/Gmail để vào app.'
-    : 'Chưa điền SUPABASE_URL / SUPABASE_ANON_KEY trong app.js. Điền dự án Supabase của chủ app rồi bật Google Provider trong Supabase Auth.';
+  if(authError) setTimeout(()=>showAuthStatus(decodeURIComponent(authError),'error'),200);
+
+  const configHint=$('#configHint');
+  if(configured){
+    configHint.textContent='';
+    configHint.classList.add('hidden');
+  }else{
+    configHint.textContent='Chưa cấu hình kết nối dữ liệu. Hãy điền SUPABASE_URL và SUPABASE_ANON_KEY trong app.js.';
+    configHint.classList.remove('hidden');
+  }
 
   bindStatic();
   if (!configured) return;
@@ -100,19 +106,72 @@ async function init(){
   });
 }
 
-function bindStatic(){
-  $('#googleLoginBtn').addEventListener('click', async ()=>{
-    if (!configured) return toast('Hãy điền Supabase URL và Anon/Publishable Key trước.');
-    const redirectTo = `${window.location.origin}${window.location.pathname}`;
-    const {error}=await sb.auth.signInWithOAuth({
-      provider:'google',
-      options:{
-        redirectTo,
-        queryParams:{prompt:'select_account'}
-      }
-    });
-    if(error) toast(error.message);
+function authMessage(error){
+  const raw=String(error?.message||error||'').trim();
+  const msg=raw.toLowerCase();
+  if(msg.includes('invalid login credentials')) return 'Email hoặc mật khẩu không đúng.';
+  if(msg.includes('email not confirmed')) return 'Email chưa được xác nhận. Hãy mở email xác nhận rồi đăng nhập lại.';
+  if(msg.includes('user already registered')) return 'Email này đã được đăng ký. Hãy đăng nhập.';
+  if(msg.includes('password should be at least')) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+  if(msg.includes('invalid email')) return 'Địa chỉ email không hợp lệ.';
+  if(msg.includes('signup is disabled')) return 'Chức năng đăng ký đang bị tắt trong Supabase Auth.';
+  if(msg.includes('rate limit')||msg.includes('over_email_send_rate_limit')) return 'Bạn thao tác quá nhanh. Hãy thử lại sau ít phút.';
+  return raw || 'Có lỗi xảy ra. Vui lòng thử lại.';
+}
+
+function showAuthStatus(message,type='info'){
+  const el=$('#authStatus');
+  if(!el) return;
+  el.textContent=message||'';
+  el.className=`auth-status ${type}`;
+  if(!message) el.classList.add('hidden');
+}
+
+function setAuthBusy(busy){
+  const login=$('#loginBtn'), signup=$('#signupBtn');
+  if(login){ login.disabled=busy; login.textContent=busy?'Đang xử lý...':'Đăng nhập'; }
+  if(signup){ signup.disabled=busy; }
+}
+
+async function loginWithEmail(){
+  if(!configured) return toast('Hãy cấu hình Supabase trước.');
+  const email=$('#authEmail').value.trim();
+  const password=$('#authPassword').value;
+  if(!email) return showAuthStatus('Nhập email để đăng nhập.','error');
+  if(!password) return showAuthStatus('Nhập mật khẩu để đăng nhập.','error');
+  setAuthBusy(true); showAuthStatus('Đang đăng nhập...');
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  setAuthBusy(false);
+  if(error) return showAuthStatus(authMessage(error),'error');
+  showAuthStatus('Đăng nhập thành công.','success');
+}
+
+async function signupWithEmail(){
+  if(!configured) return toast('Hãy cấu hình Supabase trước.');
+  const email=$('#authEmail').value.trim();
+  const password=$('#authPassword').value;
+  if(!email) return showAuthStatus('Nhập email để đăng ký.','error');
+  if(password.length<6) return showAuthStatus('Mật khẩu phải có ít nhất 6 ký tự.','error');
+  setAuthBusy(true); showAuthStatus('Đang tạo tài khoản...');
+  const emailRedirectTo=`${window.location.origin}${window.location.pathname}`;
+  const displayName=email.split('@')[0]||'Người dùng';
+  const {data,error}=await sb.auth.signUp({
+    email,password,
+    options:{emailRedirectTo,data:{full_name:displayName}}
   });
+  setAuthBusy(false);
+  if(error) return showAuthStatus(authMessage(error),'error');
+  if(data?.session){
+    showAuthStatus('Đăng ký thành công. Đang vào LUMINA...','success');
+  }else{
+    $('#authPassword').value='';
+    showAuthStatus('Đăng ký thành công. Hãy kiểm tra email và bấm liên kết xác nhận trước khi đăng nhập.','success');
+  }
+}
+
+function bindStatic(){
+  $('#emailAuthForm').addEventListener('submit', async e=>{e.preventDefault();await loginWithEmail();});
+  $('#signupBtn').addEventListener('click', signupWithEmail);
   $('#demoBtn').addEventListener('click', ()=>{
     state.demo=true; state.user={id:'demo-user',email:'demo@lumina.app',user_metadata:{full_name:'Duy Vĩnh'}};
     state.profile={display_name:'Duy Vĩnh',monthly_budget:0}; demoLoad(); showApp();
@@ -298,8 +357,7 @@ function renderTransactions(){
 function renderSettings(){
   return `<div class="page-head"><h2>Cài đặt</h2><span class="sync-pill ${state.demo?'offline':''}">${state.demo?'Demo cục bộ':'Supabase online'}</span></div>
     <div class="panel"><div class="setting-row"><div><strong>Bubble trợ lý</strong><small>Hiển thị Lumina đang “nói”</small></div><button class="switch ${state.settings.bubbles!==false?'on':''}" data-toggle="bubbles"></button></div><div class="setting-row"><div><strong>Âm thanh</strong><small>Hiệu ứng xác nhận nhẹ</small></div><button class="switch ${state.settings.sound!==false?'on':''}" data-toggle="sound"></button></div></div>
-    <div class="panel"><div class="setting-row"><div><strong>Tài khoản đăng nhập</strong><small>Google/Gmail qua Supabase Auth.</small></div><span>✓</span></div><div class="setting-row"><div><strong>Kho dữ liệu</strong><small>Một dự án Supabase của chủ app; RLS tách dữ liệu theo auth.uid().</small></div><span>✓</span></div><div class="setting-row"><div><strong>Phiên bản</strong><small>LUMINA Money · Update Gate thủ công</small></div><span>v${APP_VERSION}</span></div><div class="setting-row"><div><strong>Cập nhật</strong><small>Kiểm tra bản deploy mới, không tự cài.</small></div><button class="mini-action" data-check-update>Kiểm tra</button></div></div>
-    <div class="notice">Mỗi người dùng đăng nhập bằng Gmail riêng. Toàn bộ dữ liệu vẫn nằm trong cùng dự án Supabase của chủ app, nhưng chính sách RLS chỉ cho phép tài khoản đang đăng nhập đọc/sửa/xóa các hàng có user_id đúng bằng ID của tài khoản đó.</div>`;
+    <div class="panel"><div class="setting-row"><div><strong>Tài khoản đăng nhập</strong><small>Email + mật khẩu</small></div><span>✓</span></div><div class="setting-row"><div><strong>Phiên bản</strong><small>LUMINA Money · Update Gate thủ công</small></div><span>v${APP_VERSION}</span></div><div class="setting-row"><div><strong>Cập nhật</strong><small>Kiểm tra bản deploy mới, không tự cài.</small></div><button class="mini-action" data-check-update>Kiểm tra</button></div></div>`;
 }
 
 function bindPage(){

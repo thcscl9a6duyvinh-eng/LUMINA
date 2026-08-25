@@ -30,10 +30,15 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(53,2
 .danger{background:rgba(255,79,103,.15);color:#ff7084;border:1px solid rgba(255,79,103,.22)}
 .ghost{width:100%;margin-top:auto}.link-btn{background:transparent;color:#64d8ff;width:100%;margin-top:12px}
 .config-hint{font-size:11px;line-height:1.45;color:#82a7ca;margin-top:14px}
-.google-btn{width:100%;margin-top:20px;border:1px solid rgba(255,255,255,.22);border-radius:15px;padding:13px 16px;background:#fff;color:#172033;font-weight:850;display:flex;align-items:center;justify-content:center;gap:11px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.google-btn:active{transform:scale(.99)}
-.google-g{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:950;font-family:Arial,sans-serif;background:conic-gradient(from -45deg,#4285f4 0 25%,#34a853 0 50%,#fbbc05 0 75%,#ea4335 0 100%);color:#fff;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
-.auth-security{margin-top:13px;padding:10px 12px;border-radius:12px;background:rgba(20,229,164,.07);border:1px solid rgba(20,229,164,.15);font-size:10px;line-height:1.45;color:#bfeee0}
+.email-auth-form{margin-top:18px}
+.email-auth-form label{margin:12px 0}
+.email-auth-form input{background:rgba(5,24,50,.88);border-color:rgba(104,191,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.email-auth-form input::placeholder{color:#647f9c}
+.auth-actions button{min-height:46px}
+.auth-actions button:disabled{opacity:.58;cursor:wait;transform:none}
+.auth-status{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(46,159,255,.08);border:1px solid rgba(74,181,255,.18);color:#b9ddff;font-size:10px;line-height:1.45}
+.auth-status.success{background:rgba(20,229,164,.08);border-color:rgba(20,229,164,.18);color:#bfeee0}
+.auth-status.error{background:rgba(255,79,103,.09);border-color:rgba(255,79,103,.22);color:#ffb9c3}
 
 
 .phone-shell{width:100%;max-width:430px;height:100dvh;margin:auto;position:relative;overflow:hidden;background:
@@ -135,7 +140,7 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(53,2
   .speech-bubble{font-size:10px;padding:8px 10px}.amount-main{font-size:20px}.mini-card{padding:6px}.tx{padding:6px 0}
 }
 
-/* ===== LUMINA v1.5.6 · consent-only update gate ===== */
+/* ===== LUMINA v1.5.7 · consent-only update gate ===== */
 .update-prompt{position:fixed;z-index:120;inset:0;display:grid;place-items:center;padding:20px;background:rgba(0,7,18,.72);backdrop-filter:blur(13px) saturate(1.2)}
 .update-dialog{width:min(360px,92vw);border-radius:28px;padding:22px 20px 18px;text-align:center;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.52),0 0 42px rgba(37,180,255,.12)}
 .update-dialog:before{content:"";position:absolute;inset:-80px -60px auto;height:180px;background:radial-gradient(circle,rgba(55,213,255,.22),transparent 64%);pointer-events:none}
