@@ -1,5 +1,16 @@
+const APP_VERSION = '1.5.6';
+const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
+const UPDATE_PROGRESS_DURATION_MS = 15000;
+
+// Update Gate: từ v1.5.6 trở đi, Vercel có deploy mới cũng KHÔNG tự thay giao diện đang dùng.
+// App chỉ chuyển sang release mới sau khi người dùng bấm "Đồng ý cập nhật".
+let pendingUpdateVersion = null;
+let updateCheckTimer = null;
+let updateFlowBusy = false;
+
+// Đây là dự án Supabase DUY NHẤT của chủ app. Người dùng cuối không cần tài khoản Supabase.
 const SUPABASE_URL = 'https://htwctvptazeloivccuth.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_CAjoORAdCLQf8ZUq8AVskQ_TPrpGyTm';
+const SUPABASE_ANON_KEY = 'sb_publishable_CAjoORAdCLQf8ZUq8AVskQ_TPrpGyTm'; // Chỉ dùng Anon/Publishable key, KHÔNG dùng service_role key ở frontend.
 
 const configured = !SUPABASE_URL.startsWith('PASTE_') && !SUPABASE_ANON_KEY.startsWith('PASTE_');
 const sb = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -72,9 +83,12 @@ function demoSave(){
 }
 
 async function init(){
+  const urlParams=new URLSearchParams(window.location.search);
+  const authError=urlParams.get('error_description')||urlParams.get('error');
+  if(authError) setTimeout(()=>toast(decodeURIComponent(authError)),200);
   $('#configHint').textContent = configured
-    ? 'Supabase đã được cấu hình trong app.js. Đăng nhập hoặc đăng ký để bắt đầu.'
-    : 'Chưa điền SUPABASE_URL / SUPABASE_ANON_KEY trong app.js. Bạn vẫn có thể mở bản demo để kiểm tra toàn bộ giao diện.';
+    ? 'Backend Supabase đã sẵn sàng. Đăng nhập bằng Google/Gmail để vào app.'
+    : 'Chưa điền SUPABASE_URL / SUPABASE_ANON_KEY trong app.js. Điền dự án Supabase của chủ app rồi bật Google Provider trong Supabase Auth.';
 
   bindStatic();
   if (!configured) return;
@@ -87,20 +101,17 @@ async function init(){
 }
 
 function bindStatic(){
-  $('#authForm').addEventListener('submit', async e=>{
-    e.preventDefault();
-    if (!configured) return toast('Hãy điền Supabase URL và Anon Key trước.');
-    const email=$('#emailInput').value.trim(), password=$('#passwordInput').value;
-    const {error}=await sb.auth.signInWithPassword({email,password});
-    if(error) toast(error.message); else toast('Đăng nhập thành công');
-  });
-  $('#signupBtn').addEventListener('click', async ()=>{
-    if (!configured) return toast('Hãy điền Supabase URL và Anon Key trước.');
-    const email=$('#emailInput').value.trim(), password=$('#passwordInput').value;
-    if(!email || password.length<6) return toast('Nhập email và mật khẩu tối thiểu 6 ký tự.');
-    const full_name=email.split('@')[0];
-    const {error}=await sb.auth.signUp({email,password,options:{data:{full_name}}});
-    if(error) toast(error.message); else toast('Đã đăng ký. Kiểm tra email nếu Supabase yêu cầu xác nhận.');
+  $('#googleLoginBtn').addEventListener('click', async ()=>{
+    if (!configured) return toast('Hãy điền Supabase URL và Anon/Publishable Key trước.');
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    const {error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{
+        redirectTo,
+        queryParams:{prompt:'select_account'}
+      }
+    });
+    if(error) toast(error.message);
   });
   $('#demoBtn').addEventListener('click', ()=>{
     state.demo=true; state.user={id:'demo-user',email:'demo@lumina.app',user_metadata:{full_name:'Duy Vĩnh'}};
@@ -111,23 +122,33 @@ function bindStatic(){
   $('#micBtn').onclick=startListening; $('#stopMicBtn').onclick=stopListening; $('#closeSheet').onclick=closeSheet;
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
   $$('.drawer-nav button').forEach(b=>b.addEventListener('click',()=>{navigate(b.dataset.page);closeDrawer()}));
-  $('#notifyBtn').onclick=()=>toast('Không có thông báo mới.');
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && !state.demo && state.user) refreshAll(); });
+  $('#notifyBtn').onclick=()=>{ if(pendingUpdateVersion) showUpdatePrompt(pendingUpdateVersion); else toast(`Bạn đang dùng LUMINA v${APP_VERSION} mới nhất đã được chấp nhận.`); };
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ if(!state.demo && state.user) refreshAll(); checkForNewVersion({silent:true}); } });
 }
 
 async function enterApp(user){
   state.demo=false; state.user=user;
   await refreshAll(); subscribeRealtime(); showApp();
 }
+
+function setAvatar(el, initials, url){
+  if(!el) return;
+  el.textContent=initials;
+  el.style.backgroundImage=url?`url("${String(url).replace(/"/g,'%22')}")`:'';
+  el.style.backgroundSize=url?'cover':'';
+  el.style.backgroundPosition=url?'center':'';
+  el.style.color=url?'transparent':'';
+}
+
 function showAuth(){
   state.user=null; state.page='home';
   $('#appShell').classList.add('hidden'); $('#authScreen').classList.remove('hidden'); closeDrawer(); closeSheet();
 }
 function showApp(){
   $('#authScreen').classList.add('hidden'); $('#appShell').classList.remove('hidden');
-  const name = state.profile?.display_name || state.user?.user_metadata?.full_name || state.user?.email?.split('@')[0] || 'Duy Vĩnh';
+  const name = state.profile?.display_name || state.user?.user_metadata?.full_name || state.user?.user_metadata?.name || state.user?.email?.split('@')[0] || 'Người dùng';
   const initials=name.split(/\s+/).map(x=>x[0]).slice(-2).join('').toUpperCase();
-  $('#userAvatar').textContent=initials; $('#drawerAvatar').textContent=initials; $('#drawerName').textContent=name; $('#drawerEmail').textContent=state.user?.email||'demo@lumina.app';
+  setAvatar($('#userAvatar'), initials, state.user?.user_metadata?.avatar_url || state.user?.user_metadata?.picture); setAvatar($('#drawerAvatar'), initials, state.user?.user_metadata?.avatar_url || state.user?.user_metadata?.picture); $('#drawerName').textContent=name; $('#drawerEmail').textContent=state.user?.email||'demo@lumina.app';
   navigate('home'); startBlinkLoop();
 }
 
@@ -277,8 +298,8 @@ function renderTransactions(){
 function renderSettings(){
   return `<div class="page-head"><h2>Cài đặt</h2><span class="sync-pill ${state.demo?'offline':''}">${state.demo?'Demo cục bộ':'Supabase online'}</span></div>
     <div class="panel"><div class="setting-row"><div><strong>Bubble trợ lý</strong><small>Hiển thị Lumina đang “nói”</small></div><button class="switch ${state.settings.bubbles!==false?'on':''}" data-toggle="bubbles"></button></div><div class="setting-row"><div><strong>Âm thanh</strong><small>Hiệu ứng xác nhận nhẹ</small></div><button class="switch ${state.settings.sound!==false?'on':''}" data-toggle="sound"></button></div></div>
-    <div class="panel"><div class="setting-row"><div><strong>Đồng bộ nhiều thiết bị</strong><small>Mọi dữ liệu thật lấy từ Supabase theo user_id.</small></div><span>✓</span></div><div class="setting-row"><div><strong>Phiên bản</strong><small>LUMINA Money</small></div><span>v1.5.4</span></div></div>
-    <div class="notice">Safari và web đã thêm vào Màn hình chính có thể không chia sẻ cùng localStorage/session trên iOS. Bản này không dùng localStorage làm nguồn dữ liệu thật: cả hai tải dữ liệu từ Supabase. Bạn chỉ cần đăng nhập cùng tài khoản ở từng nơi một lần.</div>`;
+    <div class="panel"><div class="setting-row"><div><strong>Tài khoản đăng nhập</strong><small>Google/Gmail qua Supabase Auth.</small></div><span>✓</span></div><div class="setting-row"><div><strong>Kho dữ liệu</strong><small>Một dự án Supabase của chủ app; RLS tách dữ liệu theo auth.uid().</small></div><span>✓</span></div><div class="setting-row"><div><strong>Phiên bản</strong><small>LUMINA Money · Update Gate thủ công</small></div><span>v${APP_VERSION}</span></div><div class="setting-row"><div><strong>Cập nhật</strong><small>Kiểm tra bản deploy mới, không tự cài.</small></div><button class="mini-action" data-check-update>Kiểm tra</button></div></div>
+    <div class="notice">Mỗi người dùng đăng nhập bằng Gmail riêng. Toàn bộ dữ liệu vẫn nằm trong cùng dự án Supabase của chủ app, nhưng chính sách RLS chỉ cho phép tài khoản đang đăng nhập đọc/sửa/xóa các hàng có user_id đúng bằng ID của tài khoản đó.</div>`;
 }
 
 function bindPage(){
@@ -287,6 +308,7 @@ function bindPage(){
   $$('[data-del]').forEach(b=>b.onclick=async()=>{const [table,id]=b.dataset.del.split(':');if(confirm('Xóa mục này?')) await dbDelete(table,id)});
   $$('[data-goal-add]').forEach(b=>b.onclick=()=>openGoalDeposit(b.dataset.goalAdd));
   $$('[data-toggle]').forEach(b=>b.onclick=()=>{const k=b.dataset.toggle;state.settings[k]=!state.settings[k];render()});
+  $$('[data-check-update]').forEach(b=>b.onclick=async()=>{const v=await checkForNewVersion({silent:false});if(!v)toast(`LUMINA v${APP_VERSION} đang là phiên bản mới nhất.`)});
   const rw=$('#robotWrap'); if(rw) rw.onclick=()=>{ if(state.listening) return; startListening(); };
 }
 
@@ -374,4 +396,174 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show'
 function escapeHtml(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function escapeAttr(v=''){return escapeHtml(v)}
 
+function semverParts(v){
+  return String(v||'').replace(/^v/i,'').split('.').map(x=>parseInt(x,10)||0);
+}
+function isNewerVersion(candidate,current){
+  const a=semverParts(candidate), b=semverParts(current), len=Math.max(a.length,b.length);
+  for(let i=0;i<len;i++){const x=a[i]||0,y=b[i]||0;if(x!==y)return x>y}
+  return false;
+}
+function parseVersionFromHtml(html){
+  const m=String(html||'').match(/<meta\s+name=["']lumina-version["']\s+content=["']([^"']+)["']/i)
+    || String(html||'').match(/<meta\s+content=["']([^"']+)["']\s+name=["']lumina-version["']/i);
+  return m?.[1]?.trim()||null;
+}
+function ensureUpdateUI(){
+  if($('#updatePrompt')) return;
+  document.body.insertAdjacentHTML('beforeend', `
+    <section id="updatePrompt" class="update-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+      <div class="update-dialog glass">
+        <div class="update-badge">✨ PHIÊN BẢN MỚI</div>
+        <div class="update-icon"><span>↻</span></div>
+        <h2 id="updateTitle">LUMINA có bản cập nhật mới</h2>
+        <p id="updateVersionText">Phiên bản mới đã sẵn sàng.</p>
+        <div class="update-version-row"><span>v${APP_VERSION}</span><b>→</b><strong id="updateTargetVersion">—</strong></div>
+        <div class="update-note">LUMINA sẽ không tự cập nhật. Chỉ khi bạn đồng ý, bản mới mới được tải và kích hoạt.</div>
+        <div class="update-actions">
+          <button id="deferUpdateBtn" class="secondary" type="button">Để sau</button>
+          <button id="acceptUpdateBtn" class="primary" type="button">Đồng ý cập nhật</button>
+        </div>
+      </div>
+    </section>
+    <section id="updateProgressOverlay" class="update-progress-overlay hidden" aria-live="assertive">
+      <div class="update-stage">
+        <div class="update-scene" aria-hidden="true">
+          <div class="update-orbit orbit-a"></div><div class="update-orbit orbit-b"></div><div class="update-orbit orbit-c"></div>
+          <div class="update-cube">
+            <div class="cube-face cube-front">L</div><div class="cube-face cube-back">✦</div>
+            <div class="cube-face cube-right">◈</div><div class="cube-face cube-left">AI</div>
+            <div class="cube-face cube-top">↻</div><div class="cube-face cube-bottom">✓</div>
+          </div>
+          <div class="update-floor"></div>
+        </div>
+        <div class="update-copy">
+          <span class="update-live-pill">LUMINA UPDATE</span>
+          <h2 id="updateProgressTitle">Đang chuẩn bị phiên bản mới...</h2>
+          <p id="updateProgressSub">Giữ nguyên màn hình trong lúc LUMINA hoàn tất cập nhật.</p>
+          <div class="release-progress"><i id="releaseProgressBar"></i><span class="release-shine"></span></div>
+          <strong id="releaseProgressPct">0%</strong>
+        </div>
+      </div>
+    </section>`);
+  $('#deferUpdateBtn').onclick=hideUpdatePrompt;
+  $('#acceptUpdateBtn').onclick=()=>pendingUpdateVersion&&runUserApprovedUpdate(pendingUpdateVersion);
+}
+function showUpdatePrompt(version){
+  if(updateFlowBusy||!version) return;
+  ensureUpdateUI();
+  pendingUpdateVersion=version;
+  $('#updateTargetVersion').textContent=`v${version}`;
+  $('#updateVersionText').textContent=`LUMINA v${version} đã được deploy và đang chờ bạn cho phép cập nhật.`;
+  $('#updatePrompt').classList.remove('hidden');
+  $('#notifDot')?.classList.remove('hidden');
+}
+function hideUpdatePrompt(){ $('#updatePrompt')?.classList.add('hidden'); }
+function setPendingUpdate(version){
+  pendingUpdateVersion=version;
+  $('#notifDot')?.classList.toggle('hidden',!version);
+}
+async function fetchLatestDeployedVersion(){
+  const url=new URL('./index.html',window.location.href);
+  url.searchParams.set('__lumina_probe',`${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const res=await fetch(url,{cache:'no-store',headers:{'X-Lumina-Version-Probe':'1'}});
+  if(!res.ok) throw new Error(`Không kiểm tra được phiên bản mới (${res.status}).`);
+  const html=await res.text();
+  return parseVersionFromHtml(html);
+}
+async function checkForNewVersion({silent=false}={}){
+  if(updateFlowBusy||location.protocol==='file:') return null;
+  try{
+    const latest=await fetchLatestDeployedVersion();
+    if(latest&&isNewerVersion(latest,APP_VERSION)){
+      const wasPending=pendingUpdateVersion===latest;
+      setPendingUpdate(latest);
+      if(!silent||!wasPending) showUpdatePrompt(latest);
+      return latest;
+    }
+    setPendingUpdate(null);
+    return null;
+  }catch(err){
+    if(!silent) toast(err.message||'Chưa thể kiểm tra bản cập nhật.');
+    return null;
+  }
+}
+function waitForController(timeout=5000){
+  if(navigator.serviceWorker?.controller) return Promise.resolve(navigator.serviceWorker.controller);
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=()=>{if(done)return;done=true;clearTimeout(t);navigator.serviceWorker?.removeEventListener('controllerchange',onChange);resolve(navigator.serviceWorker?.controller||null)};
+    const onChange=()=>finish();
+    const t=setTimeout(finish,timeout);
+    navigator.serviceWorker?.addEventListener('controllerchange',onChange,{once:true});
+  });
+}
+function swRequest(type,payload={},timeout=35000){
+  return new Promise(async(resolve,reject)=>{
+    const controller=navigator.serviceWorker?.controller||await waitForController();
+    if(!controller) return reject(new Error('Update Gate chưa được kích hoạt. Hãy đóng rồi mở lại LUMINA một lần.'));
+    const channel=new MessageChannel();
+    const timer=setTimeout(()=>reject(new Error('Quá thời gian xử lý bản cập nhật.')),timeout);
+    channel.port1.onmessage=e=>{clearTimeout(timer);const data=e.data||{};data.ok?resolve(data):reject(new Error(data.error||'Không thể xử lý bản cập nhật.'))};
+    controller.postMessage({type,...payload},[channel.port2]);
+  });
+}
+function setUpdateProgress(pct,status){
+  const n=Math.max(0,Math.min(100,Math.round(pct)));
+  const bar=$('#releaseProgressBar'),label=$('#releaseProgressPct');
+  if(bar)bar.style.width=`${n}%`; if(label)label.textContent=`${n}%`;
+  if(status&&$('#updateProgressSub'))$('#updateProgressSub').textContent=status;
+}
+async function runUserApprovedUpdate(version){
+  if(updateFlowBusy) return;
+  updateFlowBusy=true; hideUpdatePrompt(); ensureUpdateUI();
+  const overlay=$('#updateProgressOverlay'); overlay.classList.remove('hidden');
+  $('#updateProgressTitle').textContent=`Đang cập nhật lên v${version}`;
+  $('#updateProgressSub').textContent='Đang tải gói giao diện và tính năng mới an toàn...';
+  setUpdateProgress(0);
+  const started=performance.now();
+  let stageDone=false,stageError=null;
+  const stagePromise=swRequest('STAGE_RELEASE',{version},45000).then(r=>{stageDone=true;return r}).catch(e=>{stageError=e;stageDone=true;throw e});
+  const ticker=setInterval(()=>{
+    const elapsed=performance.now()-started;
+    let pct=Math.floor((elapsed/UPDATE_PROGRESS_DURATION_MS)*100);
+    if(!stageDone) pct=Math.min(pct,99);
+    setUpdateProgress(Math.min(pct,100),pct<35?'Đang tải giao diện mới...':pct<72?'Đang đồng bộ các mô-đun LUMINA...':pct<100?'Đang xác minh bản cập nhật...':'Hoàn tất');
+  },80);
+  try{
+    await Promise.all([stagePromise,new Promise(r=>setTimeout(r,UPDATE_PROGRESS_DURATION_MS))]);
+    clearInterval(ticker);
+    if(stageError) throw stageError;
+    setUpdateProgress(100,'Bản cập nhật đã được xác minh.');
+    await swRequest('COMMIT_RELEASE',{version},10000);
+    $('#updateProgressTitle').textContent=`Cập nhật phiên bản mới v${version} thành công`;
+    $('#updateProgressSub').textContent='LUMINA đang đưa bạn trở lại màn hình chính...';
+    overlay.classList.add('update-success');
+    sessionStorage.setItem('lumina-return-home','1');
+    await new Promise(r=>setTimeout(r,1800));
+    const next=new URL(window.location.href); ['error','error_code','error_description','code'].forEach(k=>next.searchParams.delete(k));
+    next.searchParams.set('updated',version);
+    window.location.replace(next.toString());
+  }catch(err){
+    clearInterval(ticker); updateFlowBusy=false;
+    overlay.classList.remove('update-success'); overlay.classList.add('hidden');
+    toast(`Cập nhật chưa hoàn tất: ${err.message||err}`);
+    setPendingUpdate(version); showUpdatePrompt(version);
+  }
+}
+async function initUpdateGate(){
+  ensureUpdateUI();
+  if(!('serviceWorker' in navigator)||!/^https?:$/.test(location.protocol)) return;
+  try{
+    await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});
+    await navigator.serviceWorker.ready;
+    await waitForController(5000);
+    setTimeout(()=>checkForNewVersion({silent:true}),1800);
+    clearInterval(updateCheckTimer);
+    updateCheckTimer=setInterval(()=>{if(!document.hidden)checkForNewVersion({silent:true})},UPDATE_CHECK_INTERVAL_MS);
+    window.addEventListener('online',()=>checkForNewVersion({silent:true}));
+  }catch(err){ console.warn('Lumina Update Gate:',err); }
+}
+
+initUpdateGate();
 init();

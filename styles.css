@@ -30,6 +30,11 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(53,2
 .danger{background:rgba(255,79,103,.15);color:#ff7084;border:1px solid rgba(255,79,103,.22)}
 .ghost{width:100%;margin-top:auto}.link-btn{background:transparent;color:#64d8ff;width:100%;margin-top:12px}
 .config-hint{font-size:11px;line-height:1.45;color:#82a7ca;margin-top:14px}
+.google-btn{width:100%;margin-top:20px;border:1px solid rgba(255,255,255,.22);border-radius:15px;padding:13px 16px;background:#fff;color:#172033;font-weight:850;display:flex;align-items:center;justify-content:center;gap:11px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.google-btn:active{transform:scale(.99)}
+.google-g{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:950;font-family:Arial,sans-serif;background:conic-gradient(from -45deg,#4285f4 0 25%,#34a853 0 50%,#fbbc05 0 75%,#ea4335 0 100%);color:#fff;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.auth-security{margin-top:13px;padding:10px 12px;border-radius:12px;background:rgba(20,229,164,.07);border:1px solid rgba(20,229,164,.15);font-size:10px;line-height:1.45;color:#bfeee0}
+
 
 .phone-shell{width:100%;max-width:430px;height:100dvh;margin:auto;position:relative;overflow:hidden;background:
  radial-gradient(circle at 50% 22%,rgba(0,158,255,.22),transparent 27%),
@@ -129,3 +134,40 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(53,2
   .home-screen{grid-template-rows:125px 72px 64px minmax(0,1fr);gap:7px}
   .speech-bubble{font-size:10px;padding:8px 10px}.amount-main{font-size:20px}.mini-card{padding:6px}.tx{padding:6px 0}
 }
+
+/* ===== LUMINA v1.5.6 · consent-only update gate ===== */
+.update-prompt{position:fixed;z-index:120;inset:0;display:grid;place-items:center;padding:20px;background:rgba(0,7,18,.72);backdrop-filter:blur(13px) saturate(1.2)}
+.update-dialog{width:min(360px,92vw);border-radius:28px;padding:22px 20px 18px;text-align:center;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.52),0 0 42px rgba(37,180,255,.12)}
+.update-dialog:before{content:"";position:absolute;inset:-80px -60px auto;height:180px;background:radial-gradient(circle,rgba(55,213,255,.22),transparent 64%);pointer-events:none}
+.update-badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:rgba(25,224,188,.1);border:1px solid rgba(25,224,188,.23);color:#78f5da;font-size:9px;font-weight:900;letter-spacing:.7px}
+.update-icon{width:60px;height:60px;margin:15px auto 10px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(145deg,#0c77f4,#19d8da);box-shadow:0 14px 30px rgba(23,141,255,.34),inset 0 1px rgba(255,255,255,.35);transform:perspective(300px) rotateX(9deg) rotateY(-10deg)}
+.update-icon span{font-size:31px;font-weight:900;animation:updateSpin 2.8s linear infinite}
+.update-dialog h2{margin:4px 0 7px;font-size:18px}.update-dialog p{margin:0;color:#b9cee3;font-size:11px;line-height:1.5}
+.update-version-row{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:15px 0 10px;padding:10px;border-radius:14px;background:rgba(2,18,39,.58);border:1px solid rgba(80,195,255,.14)}
+.update-version-row span,.update-version-row strong{font-size:12px}.update-version-row span{color:#7e9bb8}.update-version-row strong{color:#69e7ff}.update-version-row b{color:#4b779b}
+.update-note{text-align:left;padding:10px 11px;border-radius:12px;background:rgba(30,143,255,.08);border:1px solid rgba(70,170,255,.15);font-size:9px;line-height:1.5;color:#b9d8f4}
+.update-actions{display:grid;grid-template-columns:1fr 1.2fr;gap:9px;margin-top:15px}.update-actions button{padding:12px 8px;font-size:11px}
+.update-progress-overlay{position:fixed;z-index:130;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 34%,#0b3869 0,#05182f 36%,#020a17 77%);overflow:hidden}
+.update-progress-overlay:before,.update-progress-overlay:after{content:"";position:absolute;width:70vmax;height:70vmax;border-radius:50%;border:1px solid rgba(67,211,255,.08);animation:updateHalo 8s linear infinite}.update-progress-overlay:after{width:48vmax;height:48vmax;animation-direction:reverse;animation-duration:6s}
+.update-stage{width:min(390px,94vw);padding:24px 22px calc(var(--safe-bottom) + 22px);text-align:center;position:relative;z-index:2}
+.update-scene{width:220px;height:220px;margin:0 auto 8px;position:relative;perspective:800px;transform-style:preserve-3d;display:grid;place-items:center}
+.update-cube{width:72px;height:72px;position:relative;transform-style:preserve-3d;animation:updateCube 5s cubic-bezier(.45,.05,.55,.95) infinite}
+.cube-face{position:absolute;inset:0;display:grid;place-items:center;border:1px solid rgba(145,235,255,.58);background:linear-gradient(145deg,rgba(20,151,255,.46),rgba(11,45,97,.66));box-shadow:inset 0 0 24px rgba(74,219,255,.2),0 0 20px rgba(38,190,255,.15);backdrop-filter:blur(4px);font-weight:950;font-size:21px;color:#e6fbff;text-shadow:0 0 14px #50dcff}
+.cube-front{transform:translateZ(36px)}.cube-back{transform:rotateY(180deg) translateZ(36px)}.cube-right{transform:rotateY(90deg) translateZ(36px)}.cube-left{transform:rotateY(-90deg) translateZ(36px)}.cube-top{transform:rotateX(90deg) translateZ(36px)}.cube-bottom{transform:rotateX(-90deg) translateZ(36px)}
+.update-orbit{position:absolute;width:150px;height:150px;border-radius:50%;border:1px solid rgba(75,221,255,.28);box-shadow:0 0 18px rgba(38,190,255,.1);transform-style:preserve-3d}
+.orbit-a{transform:rotateX(66deg);animation:orbitA 3.2s linear infinite}.orbit-b{transform:rotateY(67deg);animation:orbitB 4.1s linear infinite}.orbit-c{width:190px;height:190px;border-style:dashed;border-color:rgba(122,105,255,.22);transform:rotateX(76deg) rotateZ(25deg);animation:orbitC 7s linear infinite}
+.update-floor{position:absolute;bottom:28px;width:154px;height:28px;border-radius:50%;background:radial-gradient(ellipse,rgba(42,223,255,.58),rgba(37,130,255,.12) 48%,transparent 72%);filter:blur(2px);transform:rotateX(72deg);animation:updateFloor 1.8s ease-in-out infinite alternate}
+.update-copy{position:relative}.update-live-pill{display:inline-flex;padding:6px 10px;border-radius:999px;border:1px solid rgba(73,219,255,.22);background:rgba(19,128,211,.12);font-size:8px;font-weight:900;letter-spacing:1.2px;color:#6ee9ff}.update-copy h2{font-size:19px;margin:10px 0 6px}.update-copy p{margin:0 auto 17px;max-width:300px;color:#91aac5;font-size:10px;line-height:1.5;min-height:30px}
+.release-progress{height:12px;position:relative;border-radius:999px;background:#031326;border:1px solid rgba(74,188,255,.21);overflow:hidden;box-shadow:inset 0 2px 10px rgba(0,0,0,.5),0 0 20px rgba(35,164,255,.08)}
+.release-progress i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#097cff,#21d8ff 56%,#28efbf);box-shadow:0 0 22px rgba(36,220,255,.55);transition:width .08s linear;position:relative}
+.release-progress i:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 18%,rgba(255,255,255,.65) 48%,transparent 72%);transform:translateX(-120%);animation:updateShine 1.15s linear infinite}
+#releaseProgressPct{font-size:36px;display:block;margin-top:9px;letter-spacing:-1px;background:linear-gradient(180deg,#fff,#67dfff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 8px 24px rgba(35,189,255,.12)}
+.update-success .update-cube{animation:updateSuccessCube .7s cubic-bezier(.2,.8,.2,1) both}.update-success .cube-front{background:linear-gradient(145deg,rgba(15,207,153,.75),rgba(8,107,124,.75))}.update-success #releaseProgressPct{color:#67f2c7;-webkit-text-fill-color:#67f2c7}
+@keyframes updateSpin{to{transform:rotate(360deg)}}
+@keyframes updateHalo{to{transform:rotate(360deg) scale(1.08)}}
+@keyframes updateCube{0%{transform:rotateX(-18deg) rotateY(0) translateY(0)}50%{transform:rotateX(18deg) rotateY(180deg) translateY(-10px)}100%{transform:rotateX(-18deg) rotateY(360deg) translateY(0)}}
+@keyframes updateSuccessCube{0%{transform:rotateX(-18deg) rotateY(250deg) scale(1)}60%{transform:rotateX(10deg) rotateY(360deg) scale(1.22)}100%{transform:rotateX(0) rotateY(360deg) scale(1.08)}}
+@keyframes orbitA{to{transform:rotateX(66deg) rotateZ(360deg)}}@keyframes orbitB{to{transform:rotateY(67deg) rotateZ(-360deg)}}@keyframes orbitC{to{transform:rotateX(76deg) rotateZ(385deg)}}
+@keyframes updateFloor{from{opacity:.55;transform:rotateX(72deg) scale(.86)}to{opacity:1;transform:rotateX(72deg) scale(1.08)}}
+@keyframes updateShine{to{transform:translateX(120%)}}
+@media(prefers-reduced-motion:reduce){.update-cube,.update-orbit,.update-floor,.update-icon span,.release-progress i:after{animation-duration:8s!important}}

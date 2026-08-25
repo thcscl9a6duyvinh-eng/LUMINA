@@ -4,12 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
   <meta name="theme-color" content="#06162d" />
+  <meta name="lumina-version" content="1.5.6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="LUMINA" />
   <title>LUMINA Money</title>
   <link rel="stylesheet" href="./styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
 </head>
 <body>
   <div id="authScreen" class="auth-screen">
@@ -18,19 +19,16 @@
         <div class="avatar">DV</div>
         <div>
           <div class="brand">LUMINA</div>
-          <div class="subtitle">Dev by Duy Vĩnh · v1.5.4</div>
+          <div class="subtitle">Dev by Duy Vĩnh · v1.5.6</div>
         </div>
       </div>
       <h1>Quản lý chi tiêu thông minh</h1>
-      <p class="muted">Dữ liệu được lưu theo tài khoản Supabase để Safari và bản thêm vào Màn hình chính cùng nhìn thấy một nguồn dữ liệu.</p>
-      <form id="authForm" autocomplete="on">
-        <label>Email<input id="emailInput" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-        <label>Mật khẩu<input id="passwordInput" type="password" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự" required minlength="6" /></label>
-        <div class="auth-actions">
-          <button class="primary" type="submit" data-mode="login">Đăng nhập</button>
-          <button class="secondary" type="button" id="signupBtn">Đăng ký</button>
-        </div>
-      </form>
+      <p class="muted">Toàn bộ dữ liệu của web app dùng chung một dự án Supabase của chủ app. Người dùng chỉ đăng nhập bằng tài khoản Google/Gmail; mỗi Gmail có vùng dữ liệu riêng và không thể xem dữ liệu của tài khoản khác.</p>
+      <button id="googleLoginBtn" class="google-btn" type="button">
+        <span class="google-g" aria-hidden="true">G</span>
+        <span>Tiếp tục với Google</span>
+      </button>
+      <div class="auth-security">🔒 Dữ liệu thu/chi được tách theo ID người dùng và khóa bằng Supabase Row Level Security (RLS).</div>
       <button id="demoBtn" class="link-btn" type="button">Xem bản demo giao diện</button>
       <div id="configHint" class="config-hint"></div>
     </div>
@@ -42,9 +40,9 @@
       <div class="brand-block">
         <div class="brand">LUMINA</div>
         <div class="subtitle">Dev by Duy Vĩnh</div>
-        <div class="version">v1.5.4</div>
+        <div class="version">v1.5.6</div>
       </div>
-      <button id="notifyBtn" class="icon-btn" aria-label="Thông báo">🔔<span id="notifDot" class="notif-dot"></span></button>
+      <button id="notifyBtn" class="icon-btn" aria-label="Thông báo">🔔<span id="notifDot" class="notif-dot hidden"></span></button>
     </header>
 
     <section id="screen" class="screen home-screen"></section>

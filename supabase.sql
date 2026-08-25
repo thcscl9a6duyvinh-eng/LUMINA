@@ -1,5 +1,8 @@
--- LUMINA Money v1.5.4 - Supabase schema
--- Chạy toàn bộ file này trong Supabase SQL Editor một lần.
+-- LUMINA Money v1.5.6 - schema unchanged from v1.5.5; Google Auth + per-user RLS.
+-- LUMINA Money v1.5.5 - Supabase schema
+-- Chạy toàn bộ file này trong Supabase SQL Editor của CHÍNH dự án Supabase chủ app.
+-- Người dùng cuối đăng nhập bằng Google/Gmail qua Supabase Auth; họ KHÔNG cần tài khoản Supabase.
+-- Tất cả người dùng dùng chung database, nhưng RLS khóa từng hàng theo auth.uid().
 
 create extension if not exists pgcrypto;
 
@@ -89,6 +92,15 @@ alter table public.loans enable row level security;
 alter table public.subscriptions enable row level security;
 alter table public.bank_accounts enable row level security;
 
+-- Bắt buộc áp RLS ở cấp bảng. Frontend chỉ được dùng anon/publishable key.
+alter table public.profiles force row level security;
+alter table public.transactions force row level security;
+alter table public.goals force row level security;
+alter table public.wallets force row level security;
+alter table public.loans force row level security;
+alter table public.subscriptions force row level security;
+alter table public.bank_accounts force row level security;
+
 do $$
 declare t text;
 begin
@@ -114,7 +126,7 @@ security definer set search_path = public
 as $$
 begin
   insert into public.profiles (id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email,'@',1)))
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email,'@',1)))
   on conflict (id) do nothing;
   return new;
 end;
@@ -135,3 +147,11 @@ begin
   begin alter publication supabase_realtime add table public.subscriptions; exception when duplicate_object then null; end;
   begin alter publication supabase_realtime add table public.bank_accounts; exception when duplicate_object then null; end;
 end $$;
+
+
+-- GOOGLE LOGIN SETUP (thực hiện trong Dashboard, không phải SQL):
+-- 1) Authentication > Providers > Google > Enable.
+-- 2) Điền Google Client ID + Client Secret từ Google Cloud Console.
+-- 3) Google Cloud OAuth redirect URI phải trỏ về: https://<PROJECT_REF>.supabase.co/auth/v1/callback
+-- 4) Authentication > URL Configuration: Site URL = domain Vercel; thêm localhost nếu cần test.
+-- 5) Frontend chỉ dùng Project URL + anon/publishable key. Tuyệt đối không đưa service_role key lên GitHub/Vercel frontend.
