@@ -938,3 +938,55 @@ html,body{background:#06162f}
   .assistant-bubble-row{height:140px !important;padding-top:6px !important;}
   .speech-bubble{width:144px !important;max-width:144px !important;min-height:84px !important;max-height:118px !important;padding:10px 12px 14px !important;}
 }
+
+
+/* v1.5.18 robot smaller by 2 steps and lifted upward */
+.assistant-zone{
+  grid-template-rows:136px 26px !important;
+  min-height:162px !important;
+  max-height:162px !important;
+  height:162px !important;
+  margin:0 0 12px !important;
+}
+.robot-wrap{
+  width:min(148px,39vw) !important;
+  height:126px !important;
+  margin:0 0 18px 6px !important;
+}
+.robot-img{filter:drop-shadow(0 0 14px rgba(48,210,255,.32));}
+.holo{width:82% !important;height:14px !important;bottom:0 !important;}
+.assistant-fx{
+  top:-6px !important;
+  height:132px !important;
+}
+.weather-mood{
+  top:48px !important;
+}
+.listen-badge{
+  top:0 !important;
+}
+.assistant-bubble-row{
+  height:136px !important;
+  padding-top:6px !important;
+}
+.speech-bubble{
+  width:150px !important;
+  max-width:150px !important;
+  min-height:88px !important;
+  max-height:118px !important;
+}
+.typing-text{max-height:80px !important;}
+@media(max-width:430px){
+  .assistant-zone{grid-template-rows:132px 26px !important;min-height:158px !important;max-height:158px !important;height:158px !important;}
+  .robot-wrap{width:min(142px,38vw) !important;height:120px !important;margin:0 0 16px 4px !important;}
+  .assistant-fx{height:128px !important;top:-6px !important;}
+  .assistant-bubble-row{height:132px !important;}
+  .speech-bubble{width:146px !important;max-width:146px !important;min-height:84px !important;max-height:114px !important;}
+}
+@media(max-width:390px){
+  .assistant-zone{grid-template-rows:126px 24px !important;min-height:150px !important;max-height:150px !important;height:150px !important;}
+  .robot-wrap{width:min(136px,37vw) !important;height:114px !important;margin:0 0 14px 2px !important;}
+  .assistant-fx{height:122px !important;top:-4px !important;}
+  .assistant-bubble-row{height:126px !important;}
+  .speech-bubble{width:142px !important;max-width:142px !important;min-height:80px !important;max-height:108px !important;}
+}
