@@ -1004,3 +1004,15 @@ html,body{background:#06162f}
 @media(max-width:390px){
   .assistant-state{transform:translateY(-34px) !important;}
 }
+
+
+/* v1.5.20 lower robot status badge ~0.3cm from v1.5.19 */
+.assistant-state{
+  transform:translateY(-27px) !important;
+}
+@media(max-width:430px){
+  .assistant-state{transform:translateY(-25px) !important;}
+}
+@media(max-width:390px){
+  .assistant-state{transform:translateY(-23px) !important;}
+}
