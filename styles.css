@@ -990,3 +990,17 @@ html,body{background:#06162f}
   .assistant-bubble-row{height:126px !important;}
   .speech-bubble{width:142px !important;max-width:142px !important;min-height:80px !important;max-height:108px !important;}
 }
+
+
+/* v1.5.19 lift robot status badge ~1cm to protect balance card */
+.assistant-state{
+  transform:translateY(-38px) !important;
+  margin-top:0 !important;
+  z-index:6 !important;
+}
+@media(max-width:430px){
+  .assistant-state{transform:translateY(-36px) !important;}
+}
+@media(max-width:390px){
+  .assistant-state{transform:translateY(-34px) !important;}
+}
